@@ -1,17 +1,17 @@
 import { randomTag } from "./utils.js";
-import { BrowserListener, DataStack, SocketEvent } from "./types";
+import { BrowserListener, DataTuple, SocketEvent } from "./types";
 import { RemoteManager } from "./rtc-connections.js";
 const { parse, stringify } = JSON;
 
-
+/**
+ *  Event-Driven Socket
+ */
 export class SocketAdapter {
   public sockRef: WebSocket;
-  public room = "";
   public lock = true;
-  public etag = randomTag();
-  public username = "_DEFAULT_USERNAME_";
+  public readonly sessionId = randomTag();
+  public username = null;
   public eventPool = new Map<SocketEvent, BrowserListener<any>[]>();
-  public remoteManager: RemoteManager;
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
     this.sockRef = new WebSocket(sockOrigin, subProtocols);
@@ -31,31 +31,22 @@ export class SocketAdapter {
       console.log("connect established");
       this.lock = false;
     })
-
-    this.remoteManager = new RemoteManager(this);
   }
 
-  public isOpen() {
-    return new Promise((resolve, reject) => {
-      this.once("open", () => {
-        if(this.sockRef.readyState === 1) {
-          resolve(true);
-        } else {
-          reject(false);
+  private initialize() {
+    this.sockRef.onmessage = ({ data }) => {
+      try {
+        const [eventType, payload, ...flags] = parse(data);
+        if (eventType && typeof eventType === "string") {
+          const e = new CustomEvent(eventType, { detail: [payload, ...flags] });
+          this.sockRef.dispatchEvent(e);
+          return;
         }
-      });
+        throw new TypeError("Respo")
+      } catch (e) {
 
-      if(this.sockRef.readyState === 1) 
-        resolve(true);
-    })
-    
-  }
-
-  public close() {
-    this.sockRef.onmessage = null;
-    this.sockRef.onclose = null;
-    this.sockRef.onopen = null;
-    this.sockRef.close();
+      }
+    }
   }
 
   public reconnect(sock: WebSocket) {
@@ -83,6 +74,29 @@ export class SocketAdapter {
         );
       }
     }
+  }
+
+  public isOpen() {
+    return new Promise((resolve, reject) => {
+      this.once("open", () => {
+        if (this.sockRef.readyState === 1) {
+          resolve(true);
+        } else {
+          reject(false);
+        }
+      });
+
+      if (this.sockRef.readyState === 1)
+        resolve(true);
+    })
+
+  }
+
+  public close() {
+    this.sockRef.onmessage = null;
+    this.sockRef.onclose = null;
+    this.sockRef.onopen = null;
+    this.sockRef.close();
   }
 
   public connections() {
@@ -129,6 +143,13 @@ export class SocketAdapter {
     this.sockRef.send(packet);
   }
 
+  /**
+   * 
+   * @param eventType
+   * @param payload 
+   * @param flags 
+   * @returns 
+   */
   public request<T = any>(eventType: string, payload: any, ...flags: any[]) {
     const replyToken = randomTag();
     const reqEvent = `request::${eventType}`;
@@ -136,7 +157,7 @@ export class SocketAdapter {
     this.sockRef.send(packet);
 
     /* seal the return value */
-    return new Promise<DataStack<T>>((resolve, timeout) => {
+    return new Promise<DataTuple<T>>((resolve, timeout) => {
       this.once(replyToken, ({ detail }) => {
         const [res] = detail;
         resolve(res);
@@ -146,7 +167,20 @@ export class SocketAdapter {
     });
   }
 
-  public dispatchEvent(eventType: string, payload: any) {
+  /**
+   * Dispatch event to sock, this is a very useful method when you want to customize the timing of certain events,
+   * payload will pass to `data.detail`, you can use `({ detail }) => { dosomething() }` in the callback function.
+   * 
+   * @example
+   * rtc.on("my-event", ({ detail }) => console.log(detail));
+   * 
+   * rtc.dispatch("my-event", {message: "test-string"})
+   * //output {message: "test-string"}
+   * 
+   * rtc.dispatch("my-event", 1000-5)
+   * //output 995
+   */
+  public dispatch(eventType: string, payload: any) {
     this.sockRef.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }

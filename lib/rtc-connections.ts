@@ -1,24 +1,7 @@
-// import "webrtc-adapter";
-import { randomTag } from "./random-tag.js";
+import { randomTag } from "./utils.js";
 import { SocketAdapter } from "./socket-adapter.js";
-
-const iceConf: RTCConfiguration = {
-  iceServers: [
-    {
-      urls: [
-        'stun:stun.l.google.com:19302',
-        'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
-        'stun:stun3.l.google.com:19302',
-        'stun:stun4.l.google.com:19302'
-      ]
-    }
-  ]
-};
-
-type ConnectRequest = { sdp: RTCSessionDescription, etag: string };
-type IceSwitchInfo = { candidate: RTCIceCandidateInit, etag: string };
-type ConnectContext = { pc: RTCPeerConnection, audio: HTMLAudioElement };
+import { ConnectContext, ConnectRequest, IceSwitchInfo } from "./types.js";
+import { iceConf } from "./config.js";
 
 export class RemoteManager {
   public connections = new Map<string, ConnectContext>();
@@ -43,9 +26,9 @@ export class RemoteManager {
   }
 
   public async toggleDevice() {
-    if(this.localStream_) {
+    if (this.localStream_) {
       this.mediaState = !this.mediaState;
-      this.localStream_.getTracks().forEach( track => {
+      this.localStream_.getTracks().forEach(track => {
         track.enabled = this.mediaState;
       });
     }
@@ -71,7 +54,7 @@ export class RemoteManager {
 
   public toggleMuted(etag) {
     const user = this.connections.get(etag);
-    if(user) {
+    if (user) {
       user.audio.muted = !user.audio.muted;
     }
   }
