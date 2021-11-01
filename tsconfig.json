@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    /* Projects */
+    "incremental": true,
+    "tsBuildInfoFile": "./release/tsBuildInfoFile.json",
+    "composite": true,
+
+    /* Language and Environment */
+    "target": "es2018",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Modules */
+    "module": "es2020",
+    "rootDir": "./",
+    "baseUrl": "./",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+
+    /* JavaScript Support */
+    "allowJs": true,
+    "checkJs": true,
+    "maxNodeModuleJsDepth": 1,
+
+    /* Emit */
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "importsNotUsedAsValues": "preserve",
+    "downlevelIteration": true,
+    "newLine": "lf",
+    "noEmitOnError": true,
+    "outDir": "./release/",
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": false,
+
+    /* Completeness */
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  },
+  "include": ["./lib/**/*", "./example/**/*"],
+  "exclude": ["./release/**/*"]
+}
