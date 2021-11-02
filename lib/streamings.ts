@@ -1,15 +1,16 @@
 import { randomTag } from "./utils.js";
-import { SocketAdapter } from "./socket-adapter.js";
+import { Connector } from "./connector.js"
 import { ConnectContext, ConnectRequest, IceSwitchInfo } from "./types.js";
 import { iceConf } from "./config.js";
 
-export class RemoteManager {
+export class Streamings {
   public connections = new Map<string, ConnectContext>();
-  public signalChannel: SocketAdapter;
+  public signalChannel: Connector;
   public mediaState = false;
   private localStream_: MediaStream = new MediaStream;
   private connectGuard_: Function = (who) => { console.log(who); return true; };
-  constructor(sock: SocketAdapter) {
+
+  constructor(sock: Connector) {
     this.signalChannel = sock;
     this.recv();
   }
@@ -43,8 +44,8 @@ export class RemoteManager {
     await pc.setLocalDescription(offer);
 
     /* wait for response */
-    this.signalChannel.once<ConnectRequest>(replyToken, async ({ detail }) => {
-      const [{ sdp, etag }] = detail;
+    this.signalChannel.once<ConnectRequest>(replyToken, async (detail) => {
+      const { sdp, etag } = detail;
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
       console.log("recv response");
     });
@@ -60,8 +61,8 @@ export class RemoteManager {
   }
 
   public async recv() {
-    this.signalChannel.on<ConnectRequest>("rtc::request", async ({ detail }) => {
-      const [{ sdp, etag }, replyToken] = detail;
+    this.signalChannel.on<ConnectRequest>("rtc::request", async (detail, replyToken) => {
+      const { sdp, etag } = detail;
       if (this.connectGuard_({ sdp, etag })) {
         const pc = new RTCPeerConnection(iceConf);
         await this.rtcEventHooks(pc, etag);
@@ -74,8 +75,8 @@ export class RemoteManager {
       }
     });
 
-    this.signalChannel.on<IceSwitchInfo>("rtc::ice_switch", async ({ detail }) => {
-      const [{ candidate, etag }] = detail;
+    this.signalChannel.on<IceSwitchInfo>("rtc::ice_switch", async (detail) => {
+      const { candidate, etag } = detail;
       const connect = this.connections.get(etag);
       if (connect) {
         connect.pc.addIceCandidate(new RTCIceCandidate(candidate));
@@ -112,14 +113,14 @@ export class RemoteManager {
       switch (pc.connectionState) {
         case "connected":
           // The connection has become fully connected
-          this.signalChannel.dispatchEvent("remoteConnected", null);
+          this.signalChannel.dispatch("remoteConnected", null);
           break;
 
         case "disconnected":
         case "failed":
         case "closed":
           this.connections.delete(remoteEtag);
-          this.signalChannel.dispatchEvent("remoteClose", this.connections);
+          this.signalChannel.dispatch("remoteClose", this.connections);
       }
     }
 
