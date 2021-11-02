@@ -1,6 +1,7 @@
 import { randomTag } from "./utils.js";
 import { BrowserListener, DataTuple, SocketEvent } from "./types";
 import { RemoteManager } from "./rtc-connections.js";
+import { failed } from "./log.js";
 const { parse, stringify } = JSON;
 
 /**
@@ -15,25 +16,11 @@ export class SocketAdapter {
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
     this.sockRef = new WebSocket(sockOrigin, subProtocols);
-
-    /* Agent events triggered by the server */
-    this.sockRef.onmessage = ({ data }) => {
-      const [eventType, payload, ...flags] = parse(data);
-      if (eventType) {
-        const event = new CustomEvent(eventType, {
-          detail: [payload, ...flags],
-        });
-        this.sockRef.dispatchEvent(event);
-      }
-    };
-
-    this.once("open", () => {
-      console.log("connect established");
-      this.lock = false;
-    })
+    this.initialize();
   }
 
   private initialize() {
+    /* Proxy event to dispatcher */
     this.sockRef.onmessage = ({ data }) => {
       try {
         const [eventType, payload, ...flags] = parse(data);
@@ -42,52 +29,42 @@ export class SocketAdapter {
           this.sockRef.dispatchEvent(e);
           return;
         }
-        throw new TypeError("Respo")
+        failed("[Websocket]", "Response format isn't DataTuple.");
       } catch (e) {
-
+        failed("[Websocket]", "Response parse error.");
       }
+    }
+
+    this.sockRef.onclose = () => {
+      const retryTime = 3;
+      const retryInterval = 3000;
+      const { url, protocol } = this.sockRef;
+      this.lock = true;
+
+
+      let attemptCount = retryTime;
+      const timer = setInterval(async () => {
+        const websocket = new WebSocket(url, protocol);
+        this.reconnect(websocket);
+        if (await this.isOpen() || (--attemptCount <= 0)) {
+          clearInterval(timer);
+        }
+      }, retryInterval);
     }
   }
 
   public reconnect(sock: WebSocket) {
     this.sockRef = sock;
-
-    /* Agent events triggered by the server */
-    this.sockRef.onmessage = ({ data }) => {
-      const [eventType, payload, ...flags] = parse(data);
-      if (eventType) {
-        const event = new CustomEvent(eventType, {
-          detail: [payload, ...flags],
-        });
-        this.sockRef.dispatchEvent(event);
-      }
-    };
-
-    /* Re-register event */
-    for (const [type, callback] of this.eventPool.entries()) {
-      if (type.includes("once::")) {
-        callback.forEach((fn) => sock.addEventListener(type, fn as any));
-      } else {
-        const eventName = type.substr(6);
-        callback.forEach((fn) =>
-          sock.addEventListener(eventName, fn as any, { once: true })
-        );
-      }
-    }
   }
 
   public isOpen() {
-    return new Promise((resolve, reject) => {
-      this.once("open", () => {
-        if (this.sockRef.readyState === 1) {
-          resolve(true);
-        } else {
-          reject(false);
-        }
-      });
+    return new Promise((resolve, _) => {
+      this.once("open", () => resolve(true));
+      this.once("close", () => resolve(false));
 
-      if (this.sockRef.readyState === 1)
-        resolve(true);
+      if (this.sockRef.readyState === WebSocket.OPEN) resolve(true);
+      if (this.sockRef.readyState === WebSocket.CLOSED) resolve(false);
+
     })
 
   }
