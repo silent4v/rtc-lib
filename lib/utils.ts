@@ -13,6 +13,21 @@ export function randomString(length = 16, charset = alphanum) {
   return result.join("");
 }
 
+export function delay(ms: number) {
+  return new Promise((done, _) => {
+    setTimeout(done, ms);
+  })
+}
+
+export function waiting(sock: WebSocket) {
+  return new Promise<boolean>((done, _) => {
+    sock.onopen = () => done(true);
+    sock.onclose = () => done(false);
+    if (sock.readyState === WebSocket.OPEN) done(true);
+    if (sock.readyState === WebSocket.CLOSED) done(false);
+  });
+}
+
 export const letters = [
   ..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
 ];

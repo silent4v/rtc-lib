@@ -8,6 +8,8 @@ export interface CustomEventListenerObj<T = any> {
   handleEvent(object: CustomEvent<DataTuple<T>>): void;
 }
 
+export type EventCallback<T> = (data: T) => void;
+
 export type BrowserListener<T = any> =
   | CustomEventListener<T>
   | CustomEventListenerObj<T>;
