@@ -6,26 +6,35 @@ const Color = {
   default: "#000000",
 }
 
+let debug = false;
+
 export function warning(title: string, body?: any) {
-  console.log(`%c[${title}] %o`, `color: ${Color.warning}`, body);
+  print("warning", title, body);
 }
 
 export function info(title: string, body?: any) {
-  console.log(`%c[${title}] %o`, `color: ${Color.info}`, body);
+  print("info", title, body);
 }
 
 export function success(title: string, body?: any) {
-  console.log(`%c[${title}] %o`, `color: ${Color.success}`, body);
+  print("success", title, body);
 }
 
 export function failed(title: string, body?: any) {
-  console.log(`%c[${title}] %o`, `color: ${Color.failed}`, body);
+  print("failed", title, body);
 }
 
 export function defineGroup(groupName: string, color: string) {
   Object.defineProperty(Color, groupName, { value: color });
 }
 
+export function enableDebug() {
+  debug = true;
+}
+
+export function disableDebug() {
+  debug = false;
+}
 /**
  * use developer define group & print to console
  * @example
@@ -38,5 +47,6 @@ export function defineGroup(groupName: string, color: string) {
  * };
  */
 export function print(group: string, title: string, body?: any) {
-  console.log(`%c[${title}] %o`, `color: ${Color[group] ?? Color.default}`, body);
+  if (debug)
+    console.log(`%c[${title}] %o`, `color: ${Color[group] ?? Color.default}`, body);
 }
