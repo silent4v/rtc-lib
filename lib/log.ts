@@ -6,7 +6,7 @@ const Color = {
   default: "#000000",
 }
 
-let debug = false;
+let debugState = false;
 
 export function warning(title: string, body?: any) {
   print("warning", title, body);
@@ -28,13 +28,9 @@ export function defineGroup(groupName: string, color: string) {
   Object.defineProperty(Color, groupName, { value: color });
 }
 
-export function enableDebug() {
-  debug = true;
-}
-
-export function disableDebug() {
-  debug = false;
-}
+export function debug(mode = true) {
+  debugState = mode;
+};
 /**
  * use developer define group & print to console
  * @example
@@ -47,6 +43,7 @@ export function disableDebug() {
  * };
  */
 export function print(group: string, title: string, body?: any) {
-  if (debug)
+  
+  if (debugState)
     console.log(`%c[${title}] %o`, `color: ${Color[group] ?? Color.default}`, body);
 }

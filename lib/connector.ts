@@ -1,6 +1,6 @@
 import { delay, randomTag, waiting } from "./utils.js";
-import { BrowserListener, DataTuple, EventCallback, SocketEvent } from "./types";
-import { failed, warning } from "./log.js";
+import type { DataTuple } from "./types.js";
+import { info, failed, success, warning, debug as setDebug } from "./log.js";
 import { EventScheduler } from "./events.js";
 const { parse, stringify } = JSON;
 
@@ -12,38 +12,46 @@ export class Connector {
   public readonly sessionId = randomTag();
 
   /* delegate function */
+  public debug = (mode: boolean) => setDebug(mode);
   public dispatch = this.events.dispatch.bind(this.events);
   public on = this.events.on.bind(this.events);
   public once = this.events.once.bind(this.events);
   public off = this.events.off.bind(this.events);
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
-    this.sockRef = new WebSocket(sockOrigin, subProtocols);
+    this.sockRef = new WebSocket(sockOrigin, /* subProtocols */);
     this.initialize();
   }
 
   private initialize() {
     /* Proxy event to dispatcher. */
-    this.sockRef.onopen = (e) => this.dispatch("open", e);
+    this.sockRef.onopen = (e) => { 
+      this.dispatch("open", e);
+    };
     this.sockRef.onerror = (e) => this.dispatch("error", e);
     this.sockRef.onmessage = ({ data }) => {
+      info("WebSocket", {
+        message: "onmessage() invoke, dispatch events",
+        rawData: data
+      });
+
       try {
         const [eventType, payload, ...flags] = parse(data);
         if (eventType && typeof eventType === "string") {
           this.dispatch(eventType, [payload, ...flags]);
           return;
         }
-        failed("[Websocket]", "Response format isn't DataTuple.");
+        failed("WebSocket", "Response format isn't DataTuple.");
       } catch (e) {
-        failed("[Websocket]", "JSON parse error.");
+        failed("WebSocket", "JSON parse error.");
       }
     }
-    
 
     /* Try to reconnect to server. */
     this.sockRef.onclose = () => {
+      info("WebSocket", "onclose() invoke")
       const { url, protocol } = this.sockRef;
-      this.reconnect(new WebSocket(url, protocol));
+      this.reconnect(new WebSocket(url, /* protocol */));
     }
   }
 
@@ -59,7 +67,7 @@ export class Connector {
         break;
       }
       await delay(retryInterval);
-      warning("[Reconnect]", `retryTime: ${retryTime}`);
+      warning("WebSocket", `Reconnect: ${retryTime} time`);
     }
   }
 
@@ -74,6 +82,7 @@ export class Connector {
     this.sockRef.onclose = null;
     this.events.eventNames().forEach(evt => this.events.clear(evt, true));
     this.sockRef.close();
+    success("WebSocket", "connection close safely.");
   }
 
   /**
@@ -91,6 +100,7 @@ export class Connector {
   public sendout(eventType: string, payload: any, ...flags: any[]) {
     const packet = stringify([eventType, payload, ...flags]);
     this.sockRef.send(packet);
+    info("[WebScoket]", `packed data: ${packet}`);
   }
 
   /**
@@ -110,6 +120,7 @@ export class Connector {
    * }
    */
   public request<T = any>(eventType: string, payload: any, ...flags: any[]) {
+    const defaultTimeoutMilliSec = 3000;
     const replyToken = randomTag();
     const reqEvent = `request::${eventType}`;
     const packet = stringify([reqEvent, payload, replyToken, ...flags]);
@@ -119,11 +130,15 @@ export class Connector {
     return new Promise<DataTuple<T>>((resolve, timeout) => {
       this.once(replyToken, (...data) => {
         resolve(data);
+        info("WebSocket", {
+          message: "recv response", eventType, payload, flags
+        });
       });
 
       setTimeout(() => {
         timeout(`${eventType} response timeout`);
-      }, 3000);
+        failed("WebSocket", `default timeout is ${defaultTimeoutMilliSec} ms`)
+      }, defaultTimeoutMilliSec);
     });
   }
 }

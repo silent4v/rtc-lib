@@ -1,4 +1,5 @@
-import { EventCallback } from "./types";
+import { info } from "./log.js";
+import { EventCallback } from "./types.js";
 
 export class EventScheduler {
   private prefix_ = "_ev_";
@@ -20,10 +21,13 @@ export class EventScheduler {
    * //output 995
    */
   public dispatch(eventType: string, payload: any, ...args: any[]) {
-    const persistentEvents = this.events_.get(eventType) ?? [];
-    const onceEvents = this.volatileEvents_.get(eventType) ?? [];
-    [...persistentEvents, ...onceEvents].forEach(callback => callback(payload, ...args));
-    this.volatileEvents_.delete(eventType);
+    const eventName = this.prefix_ + eventType;
+    const persistentEvents = this.events_.get(eventName) ?? [];
+    const onceEvents = this.volatileEvents_.get(eventName) ?? [];
+    const invokeChain = [...persistentEvents, ...onceEvents];
+    info("Events::dispatch", { eventType, invokeChain });
+    invokeChain.forEach(callback => callback(payload, ...args));
+    this.volatileEvents_.delete(eventName);
   }
 
   /**
@@ -32,9 +36,12 @@ export class EventScheduler {
    * Using `on()` will permanently monitor the triggering of the event until it is removed with `off()`
    */
   public on<T = any>(eventType: string, callback: EventCallback<T>) {
+    const eventName = this.prefix_ + eventType;
     if (typeof callback !== "function") throw new TypeError("callback must be function");
-    const pool = this.events_.get(this.prefix_ + eventType) ?? [];
-    pool.push(callback);
+    if (!this.events_.has(eventName)) this.events_.set(eventName, []);
+    const pool = this.events_.get(eventName);
+    pool!.push(callback);
+    info("Events::on", { eventType, dispather: pool });
     return this;
   }
 
@@ -45,9 +52,12 @@ export class EventScheduler {
    * or invoke `offOnce()` to remove event listener
    */
   public once<T = any>(eventType: string, callback: EventCallback<T>) {
+    const eventName = this.prefix_ + eventType;
     if (typeof callback !== "function") throw new TypeError("callback must be function");
-    const pool = this.volatileEvents_.get(this.prefix_ + eventType) ?? [];
-    pool.push(callback);
+    if (!this.volatileEvents_.has(eventName)) this.volatileEvents_.set(eventName, []);
+    const pool = this.volatileEvents_.get(eventName);
+    pool!.push(callback);
+    info("Events::once", { eventType, dispather: pool });
     return this;
   }
 
