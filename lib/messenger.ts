@@ -1,5 +1,6 @@
 import type { Message } from "./types.js";
 import { Connector } from "./connector.js";
+import { success, warning } from "./log.js";
 
 export class Messenger {
   public textChannel = new Set<string>();
@@ -15,12 +16,17 @@ export class Messenger {
       this.signal.dispatch(roomId, { message, who, at });
       this.inbox.push(data);
 
-      if (this.inbox.length === this.highPressure_)
+      if (this.inbox.length === this.highPressure_) {
         this.signal.dispatch("text::highPressure", this.inbox.length);
+        warning("Messenger::highPressure", { max: this.reserve_, now: this.inbox.length });
+      }
 
       if (this.inbox.length > this.reserve_) {
         this.signal.dispatch("text::remove", this.inbox.shift());
+        warning("Messenger::remove", "Inbox is full");
       }
+
+      success("Messenger::recv", data);
     })
   }
 
