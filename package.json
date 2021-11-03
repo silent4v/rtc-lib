@@ -7,6 +7,10 @@
   "main": "index.js",
   "author": "YanHau <yhchen.space@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "lib:build": "tsc -p ./tsconfig.json",
+    "lib:dev": "tsc -p ./tsconfig.json -w & node serve.js"
+  },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/node": "^16.11.6",
