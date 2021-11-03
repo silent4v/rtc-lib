@@ -1,4 +1,4 @@
-import { WsClient } from "./client.trait";
+import { WsClient } from "./client.trait.js";
 
 export interface IServer {
   listRoomState(roomId: string);

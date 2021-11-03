@@ -1,4 +1,4 @@
-import { WsClient } from "../interface/client.trait"
+import { WsClient } from "../interface/client.trait.js"
 import { WsServer } from "../server.js";
 
 /* Server-side event hooks */

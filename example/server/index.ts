@@ -1,7 +1,6 @@
 import { createServer as createSecureServer } from "https";
 import { createServer, IncomingMessage, ServerResponse } from "http";
-import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
+import { dirname } from "path";
 import { performance } from "perf_hooks";
 import { fileURLToPath } from 'url';
 
@@ -65,4 +64,4 @@ createServer(onRequest).on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket as any, head, function done(ws) {
     wss.emit("connection", ws, request);
   });
-}).listen(30001, "0.0.0.0", () => console.log("HTTP Server run at port:30001"));;
+}).listen(30000, "0.0.0.0", () => console.log("HTTP Server run at port:30001"));;

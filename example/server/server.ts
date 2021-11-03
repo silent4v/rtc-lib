@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { WsClient } from "./interface/client.trait.js";
-import { IServer, RoomState } from "./interface/server";
+import { IServer, RoomState } from "./interface/server.js";
 
 export class WsServer extends WebSocketServer implements IServer {
   public shareObj = {
