@@ -1,4 +1,4 @@
-import { delay, randomTag, waiting } from "./utils.js";
+import { delay, oct, randomString, randomTag, waiting } from "./utils.js";
 import type { DataTuple } from "./types.js";
 import { info, failed, success, warning, debug as setDebug } from "./log.js";
 import { EventScheduler } from "./events.js";
@@ -17,15 +17,30 @@ export class Connector {
   public on = this.events.on.bind(this.events);
   public once = this.events.once.bind(this.events);
   public off = this.events.off.bind(this.events);
+  private reqIter = this.gen();
+  private incrSeq = "";
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
     this.sockRef = new WebSocket(sockOrigin, /* subProtocols */);
     this.initialize();
+    this.reqIter.next();
+    Object.defineProperty(this, "sessionId", {
+      writable: false,
+      configurable: false,
+    });
+  }
+
+  private *gen() {
+    let evt = "";
+    while (true) {
+      this.incrSeq = `${evt}::${performance.now().toString(36)}`;
+      evt = yield;
+    }
   }
 
   private initialize() {
     /* Proxy event to dispatcher. */
-    this.sockRef.onopen = (e) => { 
+    this.sockRef.onopen = (e) => {
       this.dispatch("open", e);
     };
     this.sockRef.onerror = (e) => this.dispatch("error", e);
@@ -97,10 +112,11 @@ export class Connector {
    * @description
    * Emit DataTuple to server, simple packed data to DataTuple.
    */
-  public sendout(eventType: string, payload: any, ...flags: any[]) {
-    const packet = stringify([eventType, payload, ...flags]);
-    this.sockRef.send(packet);
-    info("[WebScoket]", `packed data: ${packet}`);
+  public async sendout(eventType: string, payload: any, ...flags: any[]) {
+    await waiting(this.sockRef);
+    const packetData = stringify([eventType, payload, ...flags]);
+    this.sockRef.send(packetData);
+    info("WebScoket::sendout", { packetData });
   }
 
   /**
@@ -119,26 +135,26 @@ export class Connector {
    *  console.log(err) // room::list response timeout.
    * }
    */
-  public request<T = any>(eventType: string, payload: any, ...flags: any[]) {
+  public async request<T = any>(eventType: string, payload: any, ...flags: any[]) {
     const defaultTimeoutMilliSec = 3000;
-    const replyToken = randomTag();
     const reqEvent = `request::${eventType}`;
-    const packet = stringify([reqEvent, payload, replyToken, ...flags]);
-    this.sockRef.send(packet);
+    this.reqIter.next(`${eventType}`)
+    this.sendout(reqEvent, payload, this.incrSeq, flags);
 
     /* packed the return value */
     return new Promise<DataTuple<T>>((resolve, timeout) => {
-      this.once(replyToken, (...data) => {
+      const timer = setTimeout(() => {
+        timeout(`${eventType} response timeout`);
+        failed("WebSocket::res-timeout", `default timeout is ${defaultTimeoutMilliSec} ms`)
+      }, defaultTimeoutMilliSec);
+
+      this.once(this.incrSeq, (...data) => {
+        clearTimeout(timer);
         resolve(data);
-        info("WebSocket", {
+        info("WebSocket::response", {
           message: "recv response", eventType, payload, flags
         });
       });
-
-      setTimeout(() => {
-        timeout(`${eventType} response timeout`);
-        failed("WebSocket", `default timeout is ${defaultTimeoutMilliSec} ms`)
-      }, defaultTimeoutMilliSec);
     });
   }
 }

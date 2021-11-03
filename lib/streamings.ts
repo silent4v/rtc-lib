@@ -5,21 +5,19 @@ import { iceConf } from "./config.js";
 
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
-  public signalChannel: Connector;
-  public mediaState = false;
-  private localStream_: MediaStream = new MediaStream;
+  public deviceOpened = false;
+  private localDevice_: MediaStream | null = null;
   private connectGuard_: Function = (who) => { console.log(who); return true; };
 
-  constructor(sock: Connector) {
-    this.signalChannel = sock;
+  constructor(public signal: Connector) {
     this.recv();
   }
 
-  public async openDevice() {
+  public async openDevice(constraints: MediaStreamConstraints) {
     try {
-      this.mediaState = true;
-      this.localStream_ = await navigator.mediaDevices.getUserMedia({ audio: true });
-      return this.localStream_;
+      this.deviceOpened = true;
+      this.localDevice_ = await navigator.mediaDevices.getUserMedia(constraints);
+      return this.localDevice_;
     } catch (e) {
       console.error("Can't open media device: ", e);
       return false;
@@ -27,10 +25,10 @@ export class Streamings {
   }
 
   public async toggleDevice() {
-    if (this.localStream_) {
-      this.mediaState = !this.mediaState;
-      this.localStream_.getTracks().forEach(track => {
-        track.enabled = this.mediaState;
+    if (this.localDevice_) {
+      this.deviceOpened = !this.deviceOpened;
+      this.localDevice_.getTracks().forEach(track => {
+        track.enabled = this.deviceOpened;
       });
     }
   }
@@ -44,12 +42,12 @@ export class Streamings {
     await pc.setLocalDescription(offer);
 
     /* wait for response */
-    this.signalChannel.once<ConnectRequest>(replyToken, async (detail) => {
+    this.signal.once<ConnectRequest>(replyToken, async (detail) => {
       const { sdp, etag } = detail;
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
       console.log("recv response");
     });
-    this.signalChannel.sendout("rtc::request", { sdp: offer, etag }, replyToken);
+    this.signal.sendout("rtc::request", { sdp: offer, etag }, replyToken);
     return pc;
   }
 
@@ -61,7 +59,7 @@ export class Streamings {
   }
 
   public async recv() {
-    this.signalChannel.on<ConnectRequest>("rtc::request", async (detail, replyToken) => {
+    this.signal.on<ConnectRequest>("rtc::request", async (detail, replyToken) => {
       const { sdp, etag } = detail;
       if (this.connectGuard_({ sdp, etag })) {
         const pc = new RTCPeerConnection(iceConf);
@@ -71,11 +69,11 @@ export class Streamings {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         (window as any).testPC = pc
-        this.signalChannel.sendout("rtc::response", { sdp: answer, etag }, replyToken);
+        this.signal.sendout("rtc::response", { sdp: answer, etag }, replyToken);
       }
     });
 
-    this.signalChannel.on<IceSwitchInfo>("rtc::ice_switch", async (detail) => {
+    this.signal.on<IceSwitchInfo>("rtc::ice_switch", async (detail) => {
       const { candidate, etag } = detail;
       const connect = this.connections.get(etag);
       if (connect) {
@@ -93,9 +91,9 @@ export class Streamings {
     this.connections.set(remoteEtag, { pc, audio: new Audio });
 
     /* Test Stream */
-    if (this.mediaState && this.localStream_) {
+    if (this.deviceOpened && this.localDevice_) {
       console.log("ADD TRACK");
-      this.localStream_.getTracks().forEach(track => pc.addTrack(track));
+      this.localDevice_.getTracks().forEach(track => pc.addTrack(track));
     }
 
     pc.ontrack = (e) => {
@@ -113,20 +111,20 @@ export class Streamings {
       switch (pc.connectionState) {
         case "connected":
           // The connection has become fully connected
-          this.signalChannel.dispatch("remoteConnected", null);
+          this.signal.dispatch("remoteConnected", null);
           break;
 
         case "disconnected":
         case "failed":
         case "closed":
           this.connections.delete(remoteEtag);
-          this.signalChannel.dispatch("remoteClose", this.connections);
+          this.signal.dispatch("remoteClose", this.connections);
       }
     }
 
     pc.onicecandidate = event => {
       if (event && event.candidate) {
-        this.signalChannel.sendout("rtc::ice_switch", event.candidate, remoteEtag);
+        this.signal.sendout("rtc::ice_switch", event.candidate, remoteEtag);
       }
     }
   }

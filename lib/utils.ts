@@ -1,7 +1,11 @@
+/**
+ * Simple uuid generator, return length 16
+ */
 export function randomTag() {
   const timestamp = Date.now().toString(16);
-  const hex = ((Math.random() * 0xfffff) | 0).toString(16).padStart(6, "0");
-  return timestamp + hex;
+  const hex1 = ((Math.random() * 0xffffff) | 0).toString(16).padStart(6, "0");
+  const hex2 = ((Math.random() * 0xfffffff) | 0).toString(16).padStart(7, "0");
+  return `${timestamp}.${hex1}.${randomString(12)}.${hex2}`;
 }
 
 export function randomString(length = 16, charset = alphanum) {
@@ -35,3 +39,5 @@ export const letters = [
 export const numbers = [..."0123456789"];
 
 export const alphanum = [...letters, ...numbers];
+
+export const oct = [...numbers, ..."abcdef"];
