@@ -45,7 +45,7 @@ export function textServerHooks(server: WsServer, client: WsClient) {
           if (user) user.reply("text::message", {
             roomId,
             message,
-            speaker: userTag,
+            who: userTag,
             at: Date.now()
           })
         })
