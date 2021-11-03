@@ -6,7 +6,7 @@ const Color = {
   default: "#000000",
 }
 
-let debugState = false;
+let debugPattern: RegExp[] = [];
 
 export function warning(title: string, body?: any) {
   print("warning", title, body);
@@ -28,9 +28,19 @@ export function defineGroup(groupName: string, color: string) {
   Object.defineProperty(Color, groupName, { value: color });
 }
 
-export function debug(mode = true) {
-  debugState = mode;
+export function debug(pattern: string, trace = true) {
+  if (trace) {
+    const traceTag = pattern === "*" ? ".*" : pattern;
+    if (debugPattern.every(e => e.source !== traceTag))
+      debugPattern.push(new RegExp(traceTag, "i"));
+  } else {
+    const reg = new RegExp(`.*${pattern}.*`);
+    debugPattern = debugPattern.filter(e => !reg.test(e.source));
+    console.log(debugPattern);
+  }
 };
+
+
 /**
  * use developer define group & print to console
  * @example
@@ -43,7 +53,6 @@ export function debug(mode = true) {
  * };
  */
 export function print(group: string, title: string, body?: any) {
-  
-  if (debugState)
+  if (debugPattern.some(regex => regex.test(title)))
     console.log(`%c[${title}] %o`, `color: ${Color[group] ?? Color.default}`, body);
 }
