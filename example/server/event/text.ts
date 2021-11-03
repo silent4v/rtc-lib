@@ -32,24 +32,26 @@ export function textServerHooks(server: WsServer, client: WsClient) {
     }
   });
 
-  client.on("text::message", ([{roomId, message}]) => {
+  client.on("request::text::message", ([{ roomId, message }, replyToken]) => {
     console.log(roomId);
     const room = textChannel.get(roomId);
     if (room) {
       console.log(room);
       room
-        //.filter(userTag => userTag !== client.etag)
+        .filter(userTag => userTag !== client.etag)
         .forEach(userTag => {
           console.log(userTag);
           const user = userTable.get(userTag);
           if (user) user.reply("text::message", {
             roomId,
             message,
-            from: client.etag,
+            from: client.etag + "::" + client.username,
             at: Date.now()
           })
-        })
+        });
+      client.reply(replyToken, 1);
     }
+    client.reply(replyToken, 0);
   });
 
   client.on("close", () => {

@@ -6,27 +6,253 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    #clients span {
+      font-size: 1.2rem;
+      font-weight: bolder;
+    }
+
+    .log {
+      min-height: 15vh;
+      max-height: 15vh;
+      overflow-y: scroll;
+    }
+
+    .log p {
+      margin: 0.5rem 0;
+      font-size: 0.8rem;
+    }
+  </style>
 </head>
 
 <body>
-  <h3>Client 001</h3>
-  <input type="text"><button>Send</button>
-  <hr>
-  <h3>Client 002</h3>
-  <input type="text"><button>Send</button>
-  <hr>
-  <h3>Client 003</h3>
-  <input type="text"><button>Send</button>
-  <hr>
+  <div>
+    <h2>Global Setting</h2>
+    <button id="use-checkbox">Use Checkbox</button>
+    <button id="use-radio">Use Radio</button>
+    <hr>
+  </div>
+  <div id="clients"></div>
+  <template id="template">
+    <span class="client"></span>
+    <input class="message">
+    <button class="send-btn">Send</button>
+    <button class="clear-btn">Clear History</button>
+    <button class="trace-btn">Trace This</button>
+    <div style="margin-top: 1rem;">
+      <label><input type="checkbox" data-room="Room1" class="rooms">Room1</input></label>
+      <label><input type="checkbox" data-room="Room2" class="rooms">Room2</input></label>
+      <label><input type="checkbox" data-room="Room3" class="rooms">Room3</input></label>
+      <label><input type="checkbox" data-room="Room4" class="rooms">Room4</input></label>
+      <label><input type="checkbox" data-room="notify" class="notify">notify</input></label>
+    </div>
+    <div>
+      <div class="log"></div>
+    </div>
+    <hr>
+  </template>
 </body>
 
 <script type="module">
   import { Connector } from "/connector.js";
-  (async () => {
-    window.rtc = new Connector("ws://localhost:30000");
-    rtc.sendout("TEST", "data");
-    rtc.debug(true);
-  })();
+  import { randomString } from "/utils.js";
+  import { defineGroup, print, warning } from "/log.js";
+  window.rtc = [];
+  window.type = "checkbox";
+  window.find = document.querySelector.bind(document);
+  window.findAll = document.querySelectorAll.bind(document);
+  window.tracingTool = null;
+  const anotherClient = new Connector("ws://localhost:30000/connect");
+
+  defineGroup("Example", "purple");
+  const log = (title, body) => print("Example", title, body);
+
+  window.onload = async () => {
+    anotherClient.username = "ExampleUser";
+    await anotherClient.register();
+
+    const clients = find("#clients")
+    find("#use-checkbox").onclick = () => {
+      window.type = "checkbox";
+      clients.innerHTML = null;
+      clearRtc();
+      for (let i = 0; i < 4; ++i)
+        createClient();
+    }
+
+    find("#use-radio").onclick = () => {
+      window.type = "radio";
+      clients.innerHTML = null;
+      clearRtc();
+      for (let i = 0; i < 4; ++i)
+        createClient();
+    }
+  }
+
+  function clearRtc() {
+    window.rtc.forEach(rtc => rtc.close());
+  }
+
+  async function createClient() {
+    const username = randomString(8).toLowerCase();
+    const template = find("#template");
+    template.content.querySelector(".client").textContent = username;
+
+    template.content.querySelector(".message").dataset[username] = true;
+    template.content.querySelector(".send-btn").dataset[username] = true;
+    template.content.querySelector(".log").dataset[username] = true;
+    template.content.querySelector(".clear-btn").dataset[username] = true;
+    template.content.querySelector(".trace-btn").dataset[username] = true;
+    template.content.querySelector("[data-room=Room1]").dataset[username] = true;
+    template.content.querySelector("[data-room=Room2]").dataset[username] = true;
+    template.content.querySelector("[data-room=Room3]").dataset[username] = true;
+    template.content.querySelector("[data-room=Room4]").dataset[username] = true;
+
+    const clone = document.importNode(template.content, true);
+    find("#clients").appendChild(clone);
+
+    /* initial sock client */
+    const rtc = new Connector("ws://localhost:30000");
+    rtc.username = username;
+    await rtc.register();
+
+    /* Add event */
+    const input = find(`.message[data-${username}]`);
+    const logBox = find(`.log[data-${username}]`);
+
+    input.onchange = () => {
+      const msg = input.value;
+      input.value = null;
+      for (const ch of rtc.messenger.textChannel) {
+        rtc.messenger.talk(ch, msg);
+        const p = document.createElement("p");
+        p.textContent = `${new Date().toLocaleTimeString()} ${username}@${ch} : ${msg}`;
+        logBox.appendChild(p);
+      }
+    };
+
+    findAll(`.rooms[data-${username}]`).forEach(target => {
+      target.type = window.type;
+      target.name = username;
+      target.onchange = e => {
+        const room = e.target.dataset.room;
+        if (target.type === "radio") {
+          rtc.messenger.only(room);
+        } else if (target.type === "checkbox") {
+          if (e.target.checked) {
+            rtc.messenger.subscribe(room);
+          } else {
+            rtc.messenger.unsubscribe(room);
+          }
+        }
+      }
+    });
+
+    rtc.on("text::message", ({ roomId, from, message, at }) => {
+      const [_, username] = from.split("::");
+      const p = document.createElement("p");
+      p.textContent = `${new Date(at).toLocaleTimeString()} ${username}@${roomId} : ${message}`;
+      logBox.appendChild(p);
+    });
+
+    rtc.messenger.notify("room1", ({ roomId, from, message, at }) => {
+      alert("Data from room1!");
+    });
+    rtc.messenger.cancelNotify("room1");
+
+    find(`.clear-btn[data-${username}]`).onclick = () => { logBox.textContent = null; }
+    find(`.trace-btn[data-${username}]`).onclick = async () => {
+      console.clear();
+      window.tracingTool = rtc;
+
+      console.log(tracingTool);
+      rtc.trace("Example");
+
+      /* example 1 - recv event */
+      tracingTool = rtc;
+      tracingTool.on("text::message", onRecv);
+
+      /* example 2 - subscribe multiscribe */
+      await tracingTool.messenger.subscribe("Room1");
+      await tracingTool.messenger.subscribe("Room2");
+      await tracingTool.messenger.subscribe("Room3");
+      await tracingTool.messenger.subscribe("Room4");
+
+      /* example 3 - talk & unsubscribe */
+      await anotherClient.messenger.talk("Room1", "Hello, tracer");
+      await anotherClient.messenger.talk("Room2", "Hello, tracer");
+      await anotherClient.messenger.talk("Room3", "Hello, tracer");
+      await anotherClient.messenger.talk("Room4", "Hello, tracer"); // You will not recv it.
+      tracingTool.messenger.unsubscribe("Room4");
+      await anotherClient.messenger.talk("Room4", "Hello, tracer"); // You will not recv it.
+
+      /* example 4 - only subscribe one channel */
+      await tracingTool.messenger.only("Room1"); // now, you just recv message from room1
+      await anotherClient.messenger.talk("Room1", "only, Room1");
+      await anotherClient.messenger.talk("Room2", "only, Room2");
+      await anotherClient.messenger.talk("Room3", "only, Room3");
+
+      /* example 5 - notify */
+      /* If you don’t want to process all the messages, 
+      you can use notify to monitor events on a specific channel */
+      tracingTool.messenger.notify("Room1", () => {
+        log("Example::notify", "I am sure it's meesage from room1")
+      });
+      await anotherClient.messenger.talk("Room1", "Notify");
+
+      /* Now, we remove the text::message event, but notify will still happen */
+      tracingTool.off("text::message", onRecv);
+      await anotherClient.messenger.talk("Room1", "You can't recv it.");
+
+      /* example 6 - cancelNotify */
+      tracingTool.messenger.cancelNotify("Room1"); // Now, you will not see this message.
+      await anotherClient.messenger.talk("Room1", "Now, You won’t process any messages");
+      warning("Example", "Now, You won’t process any messages");
+
+      /* example 7 - inbox */
+      // Now, you just subscribe Room1, but not process any message.
+      // But message still in your inbox.
+      log("Example::inbox", tracingTool.messenger.inbox); // length = 8
+      const unread1 = tracingTool.messenger.read(5); // Retrieve 5 unread messages
+      log("Example::unread", unread1, tracingTool.messenger.cursor); // length = 5
+
+      const unread2 = tracingTool.messenger.read(5); // Retrieve 5 unread messages
+      log("Example::unread", unread2, tracingTool.messenger.cursor); // length = 3
+
+      /* example 8 - truncate */
+      tracingTool.messenger.truncate(); // It's can truncate you inbox.
+      log("Example::truncate", tracingTool.messenger.inbox); // length = 8
+
+      /* example 9 - reserve */
+      tracingTool.messenger.reserve(10); // use `reserve` Limit inbox size
+
+      tracingTool.on("text::highPressure", (size) => {
+        log("Example::highPressure", "If you see this message, it means the capacity of inbox has reached " + size);
+      });
+
+      tracingTool.on("text::remove", (size) => {
+        warning("Example::remove", "If you see this message, it means the capacity of the inbox is full");
+      });
+
+      for (let i = 0; i < 15; ++i) await anotherClient.messenger.talk("Room1", i);
+      log("Example::inbox", tracingTool.messenger.inbox);
+
+      /* example 9 - high pressure */
+      tracingTool.messenger.truncate(); // clear inbox
+      // You can pass `high pressure` to reserve
+      // range of highPressure = inbox.reserve_/2 ~ inbox.reserve_
+      // example , if reserve size of inbox = 10, range of highPressure = 5 ~ 10
+      tracingTool.messenger.reserve(10, 8); 
+      for (let i = 0; i < 8; ++i) await anotherClient.messenger.talk("Room1", i);
+      log("Example::inbox", tracingTool.messenger.inbox);
+    }
+  }
+
+  function onRecv(data) {
+    const { message, roomId, from } = data;
+    const [_, username] = from.split("::");
+    log("Example", `I Recv: \`${message}\` at ${roomId}, from ${username}`);
+  }
 </script>
 
 </html>
