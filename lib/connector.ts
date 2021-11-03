@@ -9,6 +9,9 @@ export class Connector {
   public sockRef: WebSocket;
   public lock = true;
   public username = null;
+  private reqIter_ = this.gen();
+  private incrSeq_ = "_DEFAULT_";
+  private registerd_ = false;
 
   /* delegate function */
   public readonly events = new EventScheduler;
@@ -21,28 +24,36 @@ export class Connector {
 
   public readonly messenger = new Messenger(this);
   public readonly sessionId = randomTag();
-  private reqIter = this.gen();
-  private incrSeq = "";
-  private registerd_ = false;
+  
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
     this.sockRef = new WebSocket(sockOrigin, /* subProtocols */);
     this.initialize();
-    this.reqIter.next();
+    this.reqIter_.next();
     Object.defineProperty(this, "sessionId", {
       writable: false,
       configurable: false,
     });
   }
 
+  /**
+   * @description
+   * Initialize the event name iterator, which will ensure that the request token will never be repeated.
+   */
   private *gen() {
     let evt = "";
     while (true) {
-      this.incrSeq = `${evt}::${performance.now().toString(36)}`;
+      this.incrSeq_ = `${evt}::${performance.now().toString(36)}`;
       evt = yield;
     }
   }
 
+  /**
+   * @description
+   * set default message & close function,
+   * when message is coming, EventScheduler will dispatch to client listener,
+   * when connection close(=disconnect), retry connect to server.
+   */
   private initialize() {
     /* Proxy event to dispatcher. */
     this.sockRef.onopen = (e) => {
@@ -74,6 +85,12 @@ export class Connector {
     }
   }
 
+  /**
+   * @description
+   * When websocket disconnect, it will try reconnect to sock server,
+   * default will retry 3 time, eveny 1s retry.
+   * if can't connect to socket server, throw Error.
+   */
   private async reconnect(sock: WebSocket) {
     let retryTime = 3;
     let retryInterval = 1000;
@@ -90,8 +107,15 @@ export class Connector {
       await delay(retryInterval);
       warning("WebSocket", `Reconnect: ${retryTime} time`);
     }
+
+    if(await waiting(sock) === false)
+      throw new Error("Websocket server can't establish connection.");
   }
 
+  /**
+   * @description
+   * register self to websocket server
+   */
   public register() {
     const result = this.request<boolean>("register", { username: this.username, etag: this.sessionId });
     return result.then(e => { this.registerd_ = true });
@@ -150,8 +174,8 @@ export class Connector {
   public async request<T = any>(eventType: string, payload: any, ...flags: any[]) {
     const defaultTimeoutMilliSec = 3000;
     const reqEvent = `request::${eventType}`;
-    this.reqIter.next(`${eventType}`)
-    this.sendout(reqEvent, payload, this.incrSeq, flags);
+    this.reqIter_.next(`${eventType}`)
+    this.sendout(reqEvent, payload, this.incrSeq_, flags);
 
     /* packed the return value */
     return new Promise<DataTuple<T>>((resolve, timeout) => {
@@ -160,7 +184,7 @@ export class Connector {
         failed("Connector::res-timeout", `default timeout is ${defaultTimeoutMilliSec} ms`)
       }, defaultTimeoutMilliSec);
 
-      this.once(this.incrSeq, (...data) => {
+      this.once(this.incrSeq_, (...data) => {
         clearTimeout(timer);
         resolve(data);
         info("Connector::response", {
