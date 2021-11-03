@@ -76,16 +76,17 @@ export class EventScheduler {
    * rtc.dispatch("test", null) // nothing
    */
   public off(eventType: string, callback: EventCallback<any>, clearOnce = false) {
-    const persistentEvents = this.events_.get(eventType) ?? [];
+    const eventName = this.prefix_ + eventType;
+    const persistentEvents = this.events_.get(eventName) ?? [];
     if (persistentEvents.includes(callback)) {
-      const index = persistentEvents.findIndex(callback);
+      const index = persistentEvents.indexOf(callback);
       persistentEvents.splice(index, 1);
     }
 
     if (clearOnce) {
-      const volatile = this.volatileEvents_.get(eventType) ?? [];
+      const volatile = this.volatileEvents_.get(eventName) ?? [];
       if (volatile.includes(callback)) {
-        const index = volatile.findIndex(callback);
+        const index = volatile.indexOf(callback);
         volatile.splice(index, 1);
       }
     }
@@ -96,9 +97,10 @@ export class EventScheduler {
    * remove all current listener on event `eventType`
    */
   public clear(eventType: string, clearOnce = false) {
-    this.events_.delete(eventType);
+    const eventName = this.prefix_ + eventType;
+    this.events_.delete(eventName);
     if (clearOnce)
-      this.volatileEvents_.delete(eventType);
+      this.volatileEvents_.delete(eventName);
     return this;
   }
 
