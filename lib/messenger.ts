@@ -1,4 +1,4 @@
-import type { Message } from "./types.js";
+import type { EventCallback, Message } from "./types.js";
 import { Connector } from "./connector.js";
 import { success, warning } from "./log.js";
 
@@ -13,7 +13,7 @@ export class Messenger {
   constructor(public signal: Connector) {
     this.signal.on<Message>("text::message", (data) => {
       const { roomId, message, who, at } = data;
-      this.signal.dispatch(roomId, { message, who, at });
+      this.signal.dispatch(`notify::${roomId}`, { message, who, at });
       this.inbox.push(data);
 
       if (this.inbox.length === this.highPressure_) {
@@ -30,28 +30,39 @@ export class Messenger {
     })
   }
 
-  public async only(textRoomId: string) {
+  public async only(textChannel: string) {
+    for (const ch of this.textChannel) {
+      await this.signal.request<boolean>("text::unsubscribe", ch);
+    }
     this.textChannel.clear();
-    await this.subscribe(textRoomId);
+    await this.subscribe(textChannel);
   }
 
-  public async subscribe(textRoomId: string) {
-    const [done] = await this.signal.request<boolean>("text::subscribe", textRoomId);
-    if (done) this.textChannel.add(textRoomId);
+  public async subscribe(textChannel: string) {
+    const [done] = await this.signal.request<boolean>("text::subscribe", textChannel);
+    if (done) this.textChannel.add(textChannel);
   }
 
-  public async unsubscribe(textRoomId: string) {
-    const [done] = await this.signal.request<boolean>("text::unsubscribe", textRoomId);
-    if (done) this.textChannel.delete(textRoomId);
+  public async unsubscribe(textChannel: string) {
+    const [done] = await this.signal.request<boolean>("text::unsubscribe", textChannel);
+    if (done) this.textChannel.delete(textChannel);
   }
 
-  public talk(textRoomId: string, message: string) {
-    return this.signal.sendout("text::message", { roomId: textRoomId, message });
+  public talk(textChannel: string, message: string) {
+    return this.signal.request("text::message", { roomId: textChannel, message });
+  }
+
+  public notify(textChannel: string, callback: EventCallback<Message>) {
+    this.signal.on(`notify::${textChannel}`, callback);
+  }
+
+  public cancelNotify(textChannel: string) {
+    this.signal.events.clear(`notify::${textChannel}`);
   }
 
   public reserve(size: number, highPressure = -1) {
-    if (size < 100 || size > 10000) {
-      throw new Error("size just allow range [100, 10000] ");
+    if (size < 10 || size > 10000) {
+      throw new Error("size just allow range [10, 10000] ");
     }
     this.reserve_ = size;
     this.highPressure_ = (size / 2) > highPressure ? size / 2 : highPressure;
@@ -59,11 +70,14 @@ export class Messenger {
 
   public truncate() {
     this.inbox = [];
+    this.cursor = 0;
   }
 
   public read(size: number) {
     const begin = this.cursor;
     this.cursor += size;
-    return this.inbox.splice(begin, size);
+    if (this.cursor > this.inbox.length)
+      this.cursor = this.inbox.length;
+    return this.inbox.slice(begin, this.cursor);
   }
 }
