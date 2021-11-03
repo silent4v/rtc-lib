@@ -1,5 +1,10 @@
-import { info } from "./log.js";
+import { print, defineGroup } from "./log.js";
 import { EventCallback } from "./types.js";
+
+defineGroup("Event", "red");
+const log = (title: string, body: any) => {
+  print("Event", title, body);
+}
 
 export class EventScheduler {
   private prefix_ = "_ev_";
@@ -25,7 +30,7 @@ export class EventScheduler {
     const persistentEvents = this.events_.get(eventName) ?? [];
     const onceEvents = this.volatileEvents_.get(eventName) ?? [];
     const invokeChain = [...persistentEvents, ...onceEvents];
-    info("Events::dispatch", { eventType, invokeChain });
+    log("Event::dispatch", { eventType, invokeChain });
     invokeChain.forEach(callback => callback(payload, ...args));
     this.volatileEvents_.delete(eventName);
   }
@@ -41,7 +46,7 @@ export class EventScheduler {
     if (!this.events_.has(eventName)) this.events_.set(eventName, []);
     const pool = this.events_.get(eventName);
     pool!.push(callback);
-    info("Events::on", { eventType, dispather: pool });
+    log("Event::on", { eventType, dispather: pool });
     return this;
   }
 
@@ -57,7 +62,7 @@ export class EventScheduler {
     if (!this.volatileEvents_.has(eventName)) this.volatileEvents_.set(eventName, []);
     const pool = this.volatileEvents_.get(eventName);
     pool!.push(callback);
-    info("Events::once", { eventType, dispather: pool });
+    log("Event::once", { eventType, dispather: pool });
     return this;
   }
 
