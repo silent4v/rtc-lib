@@ -78,8 +78,9 @@ export class Connector {
     }
 
     /* Try to reconnect to server. */
-    this.sockRef.onclose = () => {
+    this.sockRef.onclose = e => {
       warning("Connector::close", "close");
+      this.dispatch("close", e);
       const { url, protocol } = this.sockRef;
       this.reconnect(new WebSocket(url, /* protocol */));
     }

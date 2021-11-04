@@ -1,12 +1,12 @@
 import { print, defineGroup } from "./log.js";
-import { EventCallback } from "./types.js";
+import { EventCallback, EventTypes, OnEventType } from "./types.js";
 
 defineGroup("Event", "red");
 const log = (title: string, body: any) => {
   print("Event", title, body);
 }
 
-export class EventScheduler {
+export class EventScheduler implements OnEventType {
   private prefix_ = "_ev_";
   private events_ = new Map<string, EventCallback<any>[]>();
   private volatileEvents_ = new Map<string, EventCallback<any>[]>();
@@ -40,7 +40,7 @@ export class EventScheduler {
    * It invoke addEventListener of sockRef, And modify the event pool.
    * Using `on()` will permanently monitor the triggering of the event until it is removed with `off()`
    */
-  public on<T = any>(eventType: string, callback: EventCallback<T>) {
+  public on<T = any>(eventType: EventTypes, callback: EventCallback<T>) {
     const eventName = this.prefix_ + eventType;
     if (typeof callback !== "function") throw new TypeError("callback must be function");
     if (!this.events_.has(eventName)) this.events_.set(eventName, []);
@@ -71,7 +71,7 @@ export class EventScheduler {
    * Remove every listened `eventType` handle
    * 
    * @example
-   * rtc.on("test", () => console.log("test event!"));
+   * rtc.on("test" as any, () => console.log("test event!"));
    * rtc.off("test"); // remove test event
    * rtc.dispatch("test", null) // nothing
    */

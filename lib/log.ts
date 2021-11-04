@@ -28,6 +28,18 @@ export function defineGroup(groupName: string, color: string) {
   Object.defineProperty(Color, groupName, { value: color });
 }
 
+/**
+ * @description
+ * Accept a string as the regex rule, when using print(), if the `title` matches the rule, the message will be printed
+ * 
+ * @example
+ * debug("Event::onmessage")
+ * print("info", "Event::onmessage", "debug message."); // It's will print
+ * 
+ * print("info", "Connector", "debug message."); // It's won't print
+ * debug("Event::onmessage", false) // use second argument to disable this rule.
+ * print("info", "Event::onmessage", "debug message."); // It's won't print
+ */
 export function debug(pattern: string, trace = true) {
   if (trace) {
     const traceTag = pattern === "*" ? ".*" : pattern;

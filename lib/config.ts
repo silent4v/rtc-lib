@@ -1,3 +1,7 @@
+/**
+ * @description
+ * ICE Server used to ensure the NAT channel between the two parties
+ */
 export const iceConf: RTCConfiguration = {
   iceServers: [
     {
