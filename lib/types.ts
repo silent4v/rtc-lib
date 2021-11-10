@@ -47,6 +47,6 @@ export type RTCGuard = (e :{sdp: string, sessionId: string}) => void;
 
 export type ConnectRequest = { sdp: RTCSessionDescription, sessionId: string };
 
-export type ConnectContext = { pc: RTCPeerConnection, audio: HTMLAudioElement };
+export type ConnectContext = { RTCRef: RTCPeerConnection, audio: HTMLAudioElement, channel: RTCDataChannel };
 
 export type IceSwitchInfo = { candidate: RTCIceCandidateInit, sessionId: string };

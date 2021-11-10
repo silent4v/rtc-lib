@@ -7,6 +7,7 @@ import { Streamings } from "./streamings.js";
 const { parse, stringify } = JSON;
 
 export class Connector {
+  public readonly sessionId = randomTag();
   public sockRef: WebSocket;
   public lock = true;
   public username = null;
@@ -14,7 +15,7 @@ export class Connector {
   private incrSeq_ = "_DEFAULT_";
   private registerd_ = false;
 
-  /* delegate function */
+  /* delegate function to events */
   public readonly events = new EventScheduler;
   public trace = (pattern: string = "*") => debug(pattern);
   public untrace = (pattern: string) => debug(pattern, false);
@@ -23,13 +24,29 @@ export class Connector {
   public once = this.events.once.bind(this.events);
   public off = this.events.off.bind(this.events);
 
+  /* delegate function to messenger */
   public readonly messenger = new Messenger(this);
+  public talk = this.messenger.talk.bind(this.messenger);
+  public reserve = this.messenger.reserve.bind(this.messenger);
+  public truncate = this.messenger.truncate.bind(this.messenger);
+  public read = this.messenger.read.bind(this.messenger);
+  public only = this.messenger.only.bind(this.messenger);
+  public subscribe = this.messenger.subscribe.bind(this.messenger);
+  public unsubscribe = this.messenger.unsubscribe.bind(this.messenger);
+  public notify = this.messenger.notify.bind(this.messenger);
+  public cancelNotify = this.messenger.cancelNotify.bind(this.messenger);
+
+  /* delegate function to streamings */
   public readonly streamings = new Streamings(this);
-  public readonly sessionId = randomTag();
-  
+  public streamStates = this.streamings.state;
+  public openDevice = this.streamings.openDevice.bind(this.streamings);
+  public call = this.streamings.call.bind(this.streamings);
+  public toggleDevice = this.streamings.toggleDevice.bind(this.streamings);
+  public toggleMuted = this.streamings.toggleMuted.bind(this.streamings);
+  public setGuard = this.streamings.setGuard.bind(this.streamings);
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
-    this.sockRef = new WebSocket(sockOrigin, /* subProtocols */);
+    this.sockRef = new WebSocket(sockOrigin, subProtocols);
     this.initialize();
     this.reqIter_.next();
     Object.defineProperty(this, "sessionId", {

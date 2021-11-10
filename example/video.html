@@ -16,11 +16,15 @@
   import { randomString } from "/utils.js";
   import { defineGroup, print, warning } from "/log.js";
   window.con = new Connector("ws://localhost:30000/connect");
-  con.username = Date.now().toString(36)
+  window.ref = null;
+  con.username = Date.now().toString(36);
+  con.trace("RTC::*");
   con.register();
   console.log("My sessionId:", con.sessionId);
   con.on("rtc::recvReq", (e) => console.log("I recv request from ", e.sessionId));
   con.on("rtc::recvRes", (e) => console.log("I recv response from ", e.sessionId));
+  con.on("rtc::channelOpen", (e) => console.log(e));
+  con.on("rtc::channelMsg", (e) => console.log(e));
 </script>
 
 </html>
