@@ -38,12 +38,16 @@ wss.defineInitRoom([
 wss.on("connection", (sock) => {
   const client = ClientTrait.init(wss, sock);
 
+  client.on("usertable", () => {
+    client.reply("usertable", [...wss.shareObj.userTable.keys()]);
+  })
+
   client.on("request::register", ([data, replyToken]) => {
-    client.etag = data.etag;
+    client.sessionId = data.sessionId;
     client.username = data.username;
     client.registered = true;
-    if (client.etag) {
-      wss.userRegister(client.etag, client);
+    if (client.sessionId) {
+      wss.userRegister(client.sessionId, client);
       client.reply(replyToken, 1);
     }
   });
@@ -65,4 +69,4 @@ createServer(onRequest).on("upgrade", (request, socket, head) => {
   wss.handleUpgrade(request, socket as any, head, function done(ws) {
     wss.emit("connection", ws, request);
   });
-}).listen(30000, "0.0.0.0", () => console.log("HTTP Server run at port:30001"));;
+}).listen(30000, "0.0.0.0", () => console.log("HTTP Server run at port:30000"));;

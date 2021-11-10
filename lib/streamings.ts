@@ -25,7 +25,7 @@ export class Streamings {
       source: HTMLAudioElement;
       muted: boolean
     }[] = [];
-    this.connections.forEach( user => {
+    this.connections.forEach(user => {
       remotes.push({
         RTCnativeRef: user.pc,
         connectionState: user.pc.connectionState,
@@ -48,17 +48,17 @@ export class Streamings {
     }
   }
 
-  public toggleMuted(etag) {
-    const user = this.connections.get(etag);
+  public toggleMuted(sessionId) {
+    const user = this.connections.get(sessionId);
     if (user) {
       user.audio.muted = !user.audio.muted;
     }
   }
 
-  public async call(etag: string) {
+  public async call(sessionId: string) {
     const replyToken = randomTag();
     const pc = new RTCPeerConnection(iceConf);
-    await this.rtcEventHooks(pc, etag);
+    await this.rtcEventHooks(pc, sessionId);
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -67,29 +67,29 @@ export class Streamings {
     this.signal.once<ConnectRequest>(replyToken, async (detail) => {
       const { sdp } = detail;
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-      this.signal.dispatch("rtc::recvRes", pc);
+      this.signal.dispatch("rtc::recvRes", { RTCPeer: pc, sessionId });
     });
-    this.signal.sendout("rtc::request", { sdp: offer, etag }, replyToken);
+    this.signal.sendout("rtc::request", { sdp: offer, sessionId }, replyToken);
     return pc;
   }
 
   public async recv() {
     this.signal.on<ConnectRequest>("rtc::request", async (detail, replyToken) => {
-      const { sdp, etag } = detail;
-      if (this.connectGuard_({ sdp, etag })) {
+      const { sdp, sessionId } = detail;
+      if (this.connectGuard_({ sdp, sessionId })) {
         const pc = new RTCPeerConnection(iceConf);
-        await this.rtcEventHooks(pc, etag);
+        await this.rtcEventHooks(pc, sessionId);
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        this.signal.dispatch("rtc::recvReq", pc);
-        this.signal.sendout("rtc::response", { sdp: answer, etag }, replyToken);
+        this.signal.dispatch("rtc::recvReq", { RTCPeer: pc, sessionId });
+        this.signal.sendout("rtc::response", { sdp: answer, sessionId }, replyToken);
       }
     });
 
     this.signal.on<IceSwitchInfo>("rtc::ice_switch", async (detail) => {
-      const { candidate, etag } = detail;
-      const connect = this.connections.get(etag);
+      const { candidate, sessionId } = detail;
+      const connect = this.connections.get(sessionId);
       if (connect) {
         connect.pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
@@ -101,8 +101,8 @@ export class Streamings {
       this.connectGuard_ = fn;
   }
 
-  public async rtcEventHooks(pc: RTCPeerConnection, remoteEtag: string) {
-    this.connections.set(remoteEtag, { pc, audio: new Audio });
+  public async rtcEventHooks(pc: RTCPeerConnection, remoteSessionId: string) {
+    this.connections.set(remoteSessionId, { pc, audio: new Audio });
 
     /* Add stream */
     if (this.streamEnabled && this.device_) {
@@ -112,7 +112,7 @@ export class Streamings {
 
     /* When Recv remote stream */
     pc.ontrack = (e) => {
-      const user = this.connections.get(remoteEtag);
+      const user = this.connections.get(remoteSessionId);
       if (user) {
         const stream = new MediaStream;
         stream.addTrack(e.track);
@@ -132,7 +132,7 @@ export class Streamings {
         case "disconnected":
         case "failed":
         case "closed":
-          this.connections.delete(remoteEtag);
+          this.connections.delete(remoteSessionId);
           this.signal.dispatch("remoteClose", this.connections);
       }
     }
@@ -140,7 +140,7 @@ export class Streamings {
     pc.onicecandidate = event => {
       if (event && event.candidate) {
         info("RTC::Candidate", pc.connectionState)
-        this.signal.sendout("rtc::ice_switch", event.candidate, remoteEtag);
+        this.signal.sendout("rtc::ice_switch", event.candidate, remoteSessionId);
       }
     }
   }

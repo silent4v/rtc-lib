@@ -19,7 +19,7 @@ function applyTrait<T extends Object, U>(
 
 export class ClientTrait implements IClientTrait {
   public username = null;
-  public etag = null;
+  public sessionId = null;
   public currentRoom = null;
   public registered = false;
 

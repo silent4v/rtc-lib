@@ -3,6 +3,7 @@ import { delay, randomTag, waiting } from "./utils.js";
 import { Messenger } from "./messenger.js";
 import { info, failed, success, warning, debug } from "./log.js";
 import { EventScheduler } from "./events.js";
+import { Streamings } from "./streamings.js";
 const { parse, stringify } = JSON;
 
 export class Connector {
@@ -23,6 +24,7 @@ export class Connector {
   public off = this.events.off.bind(this.events);
 
   public readonly messenger = new Messenger(this);
+  public readonly streamings = new Streamings(this);
   public readonly sessionId = randomTag();
   
 
@@ -118,7 +120,7 @@ export class Connector {
    * register self to websocket server
    */
   public register() {
-    const result = this.request<boolean>("register", { username: this.username, etag: this.sessionId });
+    const result = this.request<boolean>("register", { username: this.username, sessionId: this.sessionId });
     return result.then(e => { this.registerd_ = true });
   };
 

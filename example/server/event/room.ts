@@ -15,7 +15,7 @@ export function roomServerHooks(server: WsServer, client: WsClient) {
     client.reply(replyToken, 1);
 
     server.broadcast("room::diff", {
-      etag: client.etag,
+      sessionId: client.sessionId,
       username: client.username,
       from: oldRoom,
       to: roomId
@@ -27,7 +27,7 @@ export function roomServerHooks(server: WsServer, client: WsClient) {
     client.reply(replyToken, 1);
 
     server.broadcast("room::diff", {
-      etag: client.etag,
+      sessionId: client.sessionId,
       username: client.username,
       from: client.currentRoom,
       to: ""
@@ -43,7 +43,7 @@ export function roomServerHooks(server: WsServer, client: WsClient) {
   client.on("close", () => {
     server.exitRoom(client.currentRoom ?? "", client);
     server.broadcast("room::diff", {
-      etag: client.etag,
+      sessionId: client.sessionId,
       username: client.username,
       from: client.currentRoom,
       to: "",

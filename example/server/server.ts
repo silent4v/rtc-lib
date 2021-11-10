@@ -22,7 +22,7 @@ export class WsServer extends WebSocketServer implements IServer {
 
     let result: RoomState[] = [];
     const clientIter = (client: WsClient) => ({
-      etag: client.etag ?? "",
+      sessionId: client.sessionId ?? "",
       username: client.username ?? "",
     });
 
@@ -68,12 +68,11 @@ export class WsServer extends WebSocketServer implements IServer {
     }
   }
 
-  public userRegister(etag: string, client: WsClient) {
+  public userRegister(sessionId: string, client: WsClient) {
     const userTable = this.shareObj.userTable;
-
-    userTable.set(etag, client);
+    userTable.set(sessionId, client);
     client.once("close", () => {
-      userTable.delete(client.etag ?? "");
+      userTable.delete(client.sessionId ?? "");
     });
   }
 

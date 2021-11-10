@@ -9,7 +9,7 @@ export interface IClientTrait {
   readonly sock_ref_: WebSocket;
   readonly server_ref_: WebSocketServer;
   username: string | null;
-  etag: string | null;
+  sessionId: string | null;
   currentRoom: string | null;
   reply(event: string, payload: any, ...flags: any[]);
 }

@@ -43,10 +43,10 @@ export type Message = {
 
 
 /* rtc */
-export type RTCGuard = (e :{sdp: string, etag: string}) => void;
+export type RTCGuard = (e :{sdp: string, sessionId: string}) => void;
 
-export type ConnectRequest = { sdp: RTCSessionDescription, etag: string };
+export type ConnectRequest = { sdp: RTCSessionDescription, sessionId: string };
 
 export type ConnectContext = { pc: RTCPeerConnection, audio: HTMLAudioElement };
 
-export type IceSwitchInfo = { candidate: RTCIceCandidateInit, etag: string };
+export type IceSwitchInfo = { candidate: RTCIceCandidateInit, sessionId: string };
