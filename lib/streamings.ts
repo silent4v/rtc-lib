@@ -1,35 +1,57 @@
 import { randomTag } from "./utils.js";
 import { Connector } from "./connector.js"
-import { ConnectContext, ConnectRequest, IceSwitchInfo } from "./types.js";
+import { ConnectContext, ConnectRequest, IceSwitchInfo, RTCGuard } from "./types.js";
 import { iceConf } from "./config.js";
+import { info, warning } from "./log.js";
 
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
-  public deviceOpened = false;
-  private localDevice_: MediaStream | null = null;
+  public streamEnabled = false;
+  private device_: MediaStream | null = null;
   private connectGuard_: Function = (who) => { console.log(who); return true; };
 
   constructor(public signal: Connector) {
     this.recv();
   }
 
-  public async openDevice(constraints: MediaStreamConstraints) {
-    try {
-      this.deviceOpened = true;
-      this.localDevice_ = await navigator.mediaDevices.getUserMedia(constraints);
-      return this.localDevice_;
-    } catch (e) {
-      console.error("Can't open media device: ", e);
-      return false;
+  public openDevice(media: MediaStream) {
+    this.device_ = media;
+  }
+
+  public get state() {
+    const remotes: {
+      RTCnativeRef: RTCPeerConnection;
+      connectionState: string;
+      source: HTMLAudioElement;
+      muted: boolean
+    }[] = [];
+    this.connections.forEach( user => {
+      remotes.push({
+        RTCnativeRef: user.pc,
+        connectionState: user.pc.connectionState,
+        source: user.audio,
+        muted: user.audio.muted,
+      });
+    })
+    return {
+      self: { device: this.device_, enable: this.streamEnabled },
+      remotes
     }
   }
 
-  public async toggleDevice() {
-    if (this.localDevice_) {
-      this.deviceOpened = !this.deviceOpened;
-      this.localDevice_.getTracks().forEach(track => {
-        track.enabled = this.deviceOpened;
+  public toggleDevice() {
+    if (this.device_) {
+      this.streamEnabled = !this.streamEnabled;
+      this.device_.getTracks().forEach(track => {
+        track.enabled = this.streamEnabled;
       });
+    }
+  }
+
+  public toggleMuted(etag) {
+    const user = this.connections.get(etag);
+    if (user) {
+      user.audio.muted = !user.audio.muted;
     }
   }
 
@@ -43,19 +65,12 @@ export class Streamings {
 
     /* wait for response */
     this.signal.once<ConnectRequest>(replyToken, async (detail) => {
-      const { sdp, etag } = detail;
+      const { sdp } = detail;
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-      console.log("recv response");
+      this.signal.dispatch("rtc::recvRes", pc);
     });
     this.signal.sendout("rtc::request", { sdp: offer, etag }, replyToken);
     return pc;
-  }
-
-  public toggleMuted(etag) {
-    const user = this.connections.get(etag);
-    if (user) {
-      user.audio.muted = !user.audio.muted;
-    }
   }
 
   public async recv() {
@@ -64,11 +79,10 @@ export class Streamings {
       if (this.connectGuard_({ sdp, etag })) {
         const pc = new RTCPeerConnection(iceConf);
         await this.rtcEventHooks(pc, etag);
-
         await pc.setRemoteDescription(new RTCSessionDescription(sdp));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        (window as any).testPC = pc
+        this.signal.dispatch("rtc::recvReq", pc);
         this.signal.sendout("rtc::response", { sdp: answer, etag }, replyToken);
       }
     });
@@ -82,7 +96,7 @@ export class Streamings {
     });
   }
 
-  public setGuard(fn: Function) {
+  public setGuard(fn: RTCGuard) {
     if (typeof fn === "function")
       this.connectGuard_ = fn;
   }
@@ -90,12 +104,13 @@ export class Streamings {
   public async rtcEventHooks(pc: RTCPeerConnection, remoteEtag: string) {
     this.connections.set(remoteEtag, { pc, audio: new Audio });
 
-    /* Test Stream */
-    if (this.deviceOpened && this.localDevice_) {
-      console.log("ADD TRACK");
-      this.localDevice_.getTracks().forEach(track => pc.addTrack(track));
+    /* Add stream */
+    if (this.streamEnabled && this.device_) {
+      warning("RTC::Track", "ADD TRACK");
+      this.device_.getTracks().forEach(track => pc.addTrack(track));
     }
 
+    /* When Recv remote stream */
     pc.ontrack = (e) => {
       const user = this.connections.get(remoteEtag);
       if (user) {
@@ -107,7 +122,7 @@ export class Streamings {
     }
 
     pc.onconnectionstatechange = () => {
-      console.log("pc.connectionState", pc.connectionState)
+      info("RTC::ConnectionState", pc.connectionState)
       switch (pc.connectionState) {
         case "connected":
           // The connection has become fully connected
@@ -124,6 +139,7 @@ export class Streamings {
 
     pc.onicecandidate = event => {
       if (event && event.candidate) {
+        info("RTC::Candidate", pc.connectionState)
         this.signal.sendout("rtc::ice_switch", event.candidate, remoteEtag);
       }
     }
