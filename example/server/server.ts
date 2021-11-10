@@ -7,6 +7,7 @@ export class WsServer extends WebSocketServer implements IServer {
     rooms: new Map<string, WsClient[]>(),
     userTable: new Map<string, WsClient>(),
     forwardTable: new Map<string, string>(),
+    textChannel: new Map<string, string[]>(),
   };
 
 

@@ -1,7 +1,12 @@
-import { info } from "./log.js";
-import { EventCallback } from "./types.js";
+import { print, defineGroup } from "./log.js";
+import { EventCallback, EventTypes, OnEventType } from "./types.js";
 
-export class EventScheduler {
+defineGroup("Event", "red");
+const log = (title: string, body: any) => {
+  print("Event", title, body);
+}
+
+export class EventScheduler implements OnEventType {
   private prefix_ = "_ev_";
   private events_ = new Map<string, EventCallback<any>[]>();
   private volatileEvents_ = new Map<string, EventCallback<any>[]>();
@@ -25,7 +30,7 @@ export class EventScheduler {
     const persistentEvents = this.events_.get(eventName) ?? [];
     const onceEvents = this.volatileEvents_.get(eventName) ?? [];
     const invokeChain = [...persistentEvents, ...onceEvents];
-    info("Events::dispatch", { eventType, invokeChain });
+    log("Event::dispatch", { eventType, invokeChain });
     invokeChain.forEach(callback => callback(payload, ...args));
     this.volatileEvents_.delete(eventName);
   }
@@ -35,13 +40,13 @@ export class EventScheduler {
    * It invoke addEventListener of sockRef, And modify the event pool.
    * Using `on()` will permanently monitor the triggering of the event until it is removed with `off()`
    */
-  public on<T = any>(eventType: string, callback: EventCallback<T>) {
+  public on<T = any>(eventType: EventTypes, callback: EventCallback<T>) {
     const eventName = this.prefix_ + eventType;
     if (typeof callback !== "function") throw new TypeError("callback must be function");
     if (!this.events_.has(eventName)) this.events_.set(eventName, []);
     const pool = this.events_.get(eventName);
     pool!.push(callback);
-    info("Events::on", { eventType, dispather: pool });
+    log("Event::on", { eventType, dispather: pool });
     return this;
   }
 
@@ -57,7 +62,7 @@ export class EventScheduler {
     if (!this.volatileEvents_.has(eventName)) this.volatileEvents_.set(eventName, []);
     const pool = this.volatileEvents_.get(eventName);
     pool!.push(callback);
-    info("Events::once", { eventType, dispather: pool });
+    log("Event::once", { eventType, dispather: pool });
     return this;
   }
 
@@ -66,21 +71,22 @@ export class EventScheduler {
    * Remove every listened `eventType` handle
    * 
    * @example
-   * rtc.on("test", () => console.log("test event!"));
+   * rtc.on("test" as any, () => console.log("test event!"));
    * rtc.off("test"); // remove test event
    * rtc.dispatch("test", null) // nothing
    */
   public off(eventType: string, callback: EventCallback<any>, clearOnce = false) {
-    const persistentEvents = this.events_.get(eventType) ?? [];
+    const eventName = this.prefix_ + eventType;
+    const persistentEvents = this.events_.get(eventName) ?? [];
     if (persistentEvents.includes(callback)) {
-      const index = persistentEvents.findIndex(callback);
+      const index = persistentEvents.indexOf(callback);
       persistentEvents.splice(index, 1);
     }
 
     if (clearOnce) {
-      const volatile = this.volatileEvents_.get(eventType) ?? [];
+      const volatile = this.volatileEvents_.get(eventName) ?? [];
       if (volatile.includes(callback)) {
-        const index = volatile.findIndex(callback);
+        const index = volatile.indexOf(callback);
         volatile.splice(index, 1);
       }
     }
@@ -91,9 +97,10 @@ export class EventScheduler {
    * remove all current listener on event `eventType`
    */
   public clear(eventType: string, clearOnce = false) {
-    this.events_.delete(eventType);
+    const eventName = this.prefix_ + eventType;
+    this.events_.delete(eventName);
     if (clearOnce)
-      this.volatileEvents_.delete(eventType);
+      this.volatileEvents_.delete(eventName);
     return this;
   }
 

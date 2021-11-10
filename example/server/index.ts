@@ -8,6 +8,7 @@ import { ClientTrait } from "./client.js";
 import { WsServer } from "./server.js";
 import { roomServerHooks } from "./event/room.js";
 import { tunnelServerHooks } from "./event/tunnel.js";
+import { textServerHooks } from "./event/text.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -43,13 +44,13 @@ wss.on("connection", (sock) => {
     client.registered = true;
     if (client.etag) {
       wss.userRegister(client.etag, client);
-      console.log(replyToken);
       client.reply(replyToken, 1);
     }
   });
 
   roomServerHooks(wss, client);
   tunnelServerHooks(wss, client);
+  textServerHooks(wss, client);
 });
 
 /* Run HTTPS server instance */

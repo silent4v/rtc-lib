@@ -1,6 +1,7 @@
-import { delay, oct, randomString, randomTag, waiting } from "./utils.js";
 import type { DataTuple } from "./types.js";
-import { info, failed, success, warning, debug as setDebug } from "./log.js";
+import { delay, randomTag, waiting } from "./utils.js";
+import { Messenger } from "./messenger.js";
+import { info, failed, success, warning, debug } from "./log.js";
 import { EventScheduler } from "./events.js";
 const { parse, stringify } = JSON;
 
@@ -8,36 +9,51 @@ export class Connector {
   public sockRef: WebSocket;
   public lock = true;
   public username = null;
-  public readonly events = new EventScheduler;
-  public readonly sessionId = randomTag();
+  private reqIter_ = this.gen();
+  private incrSeq_ = "_DEFAULT_";
+  private registerd_ = false;
 
   /* delegate function */
-  public debug = (mode: boolean) => setDebug(mode);
+  public readonly events = new EventScheduler;
+  public trace = (pattern: string = "*") => debug(pattern);
+  public untrace = (pattern: string) => debug(pattern, false);
   public dispatch = this.events.dispatch.bind(this.events);
   public on = this.events.on.bind(this.events);
   public once = this.events.once.bind(this.events);
   public off = this.events.off.bind(this.events);
-  private reqIter = this.gen();
-  private incrSeq = "";
+
+  public readonly messenger = new Messenger(this);
+  public readonly sessionId = randomTag();
+  
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
     this.sockRef = new WebSocket(sockOrigin, /* subProtocols */);
     this.initialize();
-    this.reqIter.next();
+    this.reqIter_.next();
     Object.defineProperty(this, "sessionId", {
       writable: false,
       configurable: false,
     });
   }
 
+  /**
+   * @description
+   * Initialize the event name iterator, which will ensure that the request token will never be repeated.
+   */
   private *gen() {
     let evt = "";
     while (true) {
-      this.incrSeq = `${evt}::${performance.now().toString(36)}`;
+      this.incrSeq_ = `${evt}::${performance.now().toString(36)}`;
       evt = yield;
     }
   }
 
+  /**
+   * @description
+   * set default message & close function,
+   * when message is coming, EventScheduler will dispatch to client listener,
+   * when connection close(=disconnect), retry connect to server.
+   */
   private initialize() {
     /* Proxy event to dispatcher. */
     this.sockRef.onopen = (e) => {
@@ -45,31 +61,37 @@ export class Connector {
     };
     this.sockRef.onerror = (e) => this.dispatch("error", e);
     this.sockRef.onmessage = ({ data }) => {
-      info("WebSocket", {
-        message: "onmessage() invoke, dispatch events",
+      warning("Connector::onmessage", {
         rawData: data
       });
 
       try {
         const [eventType, payload, ...flags] = parse(data);
         if (eventType && typeof eventType === "string") {
-          this.dispatch(eventType, [payload, ...flags]);
+          this.dispatch(eventType, payload, ...flags);
           return;
         }
-        failed("WebSocket", "Response format isn't DataTuple.");
+        failed("Connector::onmessage", "Response format isn't DataTuple.");
       } catch (e) {
-        failed("WebSocket", "JSON parse error.");
+        failed("Connector::onmessage", "JSON parse error.");
       }
     }
 
     /* Try to reconnect to server. */
-    this.sockRef.onclose = () => {
-      info("WebSocket", "onclose() invoke")
+    this.sockRef.onclose = e => {
+      warning("Connector::close", "close");
+      this.dispatch("close", e);
       const { url, protocol } = this.sockRef;
       this.reconnect(new WebSocket(url, /* protocol */));
     }
   }
 
+  /**
+   * @description
+   * When websocket disconnect, it will try reconnect to sock server,
+   * default will retry 3 time, eveny 1s retry.
+   * if can't connect to socket server, throw Error.
+   */
   private async reconnect(sock: WebSocket) {
     let retryTime = 3;
     let retryInterval = 1000;
@@ -79,12 +101,27 @@ export class Connector {
         this.sockRef = sock;
         this.initialize();
         this.dispatch("reconnect", null);
+        if (this.registerd_) this.register();
+        success("Connector::reconnect", "reconnect");
         break;
       }
       await delay(retryInterval);
       warning("WebSocket", `Reconnect: ${retryTime} time`);
     }
+
+    if(await waiting(sock) === false)
+      throw new Error("Websocket server can't establish connection.");
   }
+
+  /**
+   * @description
+   * register self to websocket server
+   */
+  public register() {
+    const result = this.request<boolean>("register", { username: this.username, etag: this.sessionId });
+    return result.then(e => { this.registerd_ = true });
+  };
+
 
   /**
    * @description
@@ -116,7 +153,7 @@ export class Connector {
     await waiting(this.sockRef);
     const packetData = stringify([eventType, payload, ...flags]);
     this.sockRef.send(packetData);
-    info("WebScoket::sendout", { packetData });
+    info("Connector::sendData", [eventType, payload, ...flags]);
   }
 
   /**
@@ -125,7 +162,7 @@ export class Connector {
    * when server reply, dispatch event to event::replyToken, return Promise.resolve(server_response)
    * If the response timeout, then return Promise.reject(`{event} timeout`);
    * 
-   * @example
+   * @examplef
    * rtc.request("room::list").then( list => console.log(list) );
    * 
    * //or if in async function:
@@ -138,21 +175,21 @@ export class Connector {
   public async request<T = any>(eventType: string, payload: any, ...flags: any[]) {
     const defaultTimeoutMilliSec = 3000;
     const reqEvent = `request::${eventType}`;
-    this.reqIter.next(`${eventType}`)
-    this.sendout(reqEvent, payload, this.incrSeq, flags);
+    this.reqIter_.next(`${eventType}`)
+    this.sendout(reqEvent, payload, this.incrSeq_, flags);
 
     /* packed the return value */
     return new Promise<DataTuple<T>>((resolve, timeout) => {
       const timer = setTimeout(() => {
         timeout(`${eventType} response timeout`);
-        failed("WebSocket::res-timeout", `default timeout is ${defaultTimeoutMilliSec} ms`)
+        failed("Connector::res-timeout", `default timeout is ${defaultTimeoutMilliSec} ms`)
       }, defaultTimeoutMilliSec);
 
-      this.once(this.incrSeq, (...data) => {
+      this.once(this.incrSeq_, (...data) => {
         clearTimeout(timer);
         resolve(data);
-        info("WebSocket::response", {
-          message: "recv response", eventType, payload, flags
+        info("Connector::response", {
+          response: eventType, data
         });
       });
     });

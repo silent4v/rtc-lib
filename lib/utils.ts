@@ -26,7 +26,7 @@ export function delay(ms: number) {
 export function waiting(sock: WebSocket) {
   return new Promise<boolean>((done, _) => {
     sock.onopen = () => done(true);
-    sock.onclose = () => done(false);
+    sock.addEventListener("close", () => done(false), { once: true });
     if (sock.readyState === WebSocket.OPEN) done(true);
     if (sock.readyState === WebSocket.CLOSED) done(false);
   });
