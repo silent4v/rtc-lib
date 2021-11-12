@@ -1,5 +1,6 @@
 /**
- * Simple uuid generator, return length 16
+ * @description
+ * Simple uuid generator, return length 16's string
  */
 export function randomTag() {
   const timestamp = Date.now().toString(16);
@@ -8,6 +9,10 @@ export function randomTag() {
   return `${timestamp}.${hex1}.${randomString(12)}.${hex2}`;
 }
 
+/**
+ * @description
+ * return random string, parameters decide length, and charset(default is letter & number).
+ */
 export function randomString(length = 16, charset = alphanum) {
   const pick = (range: number) => charset[(Math.random() * range) | 0];
   const result: string[] = [];
@@ -17,12 +22,27 @@ export function randomString(length = 16, charset = alphanum) {
   return result.join("");
 }
 
+/**
+ * @description
+ * delay milliseconds , only available in async function.
+ * 
+ * @example
+ * async () => {
+ *  dosomething1();
+ *  await delay(1000);
+ *  dosomething2();
+ * }
+ */
 export function delay(ms: number) {
   return new Promise((done, _) => {
     setTimeout(done, ms);
   })
 }
 
+/**
+ * @description
+ * Pass in a websocket instance, when the connection is ready, trigger the event.
+ */
 export function waiting(sock: WebSocket) {
   return new Promise<boolean>((done, _) => {
     sock.onopen = () => done(true);
