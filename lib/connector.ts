@@ -181,7 +181,7 @@ export class Connector {
    * when server reply, dispatch event to event::replyToken, return Promise.resolve(server_response)
    * If the response timeout, then return Promise.reject(`{event} timeout`);
    * 
-   * @examplef
+   * @example
    * rtc.request("room::list").then( list => console.log(list) );
    * 
    * //or if in async function:
