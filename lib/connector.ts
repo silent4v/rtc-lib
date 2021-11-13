@@ -39,10 +39,10 @@ export class Connector {
   /* delegate function to streamings */
   public readonly streamings = new Streamings(this);
   public streamStates = this.streamings.state;
-  public openDevice = this.streamings.openDevice.bind(this.streamings);
   public call = this.streamings.call.bind(this.streamings);
-  public toggleDevice = this.streamings.toggleDevice.bind(this.streamings);
-  public toggleMuted = this.streamings.toggleMuted.bind(this.streamings);
+  public setDevice = this.streamings.setDevice.bind(this.streamings);
+  public setDeviceEnabled = this.streamings.setDeviceEnabled.bind(this.streamings);
+  public setRemoteMuted = this.streamings.setRemoteMuted.bind(this.streamings);
   public setGuard = this.streamings.setGuard.bind(this.streamings);
 
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
@@ -128,7 +128,7 @@ export class Connector {
       warning("WebSocket", `Reconnect: ${retryTime} time`);
     }
 
-    if(await waiting(sock) === false)
+    if (await waiting(sock) === false)
       throw new Error("Websocket server can't establish connection.");
   }
 
