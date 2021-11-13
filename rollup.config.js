@@ -11,5 +11,19 @@ export default {
       format: "umd",
       indent: false,
     },
+    {
+      sourcemap: true,
+      name: "RTCCore",
+      file: "release/rtc-core.cjs.js",
+      format: "cjs",
+      indent: false,
+    },
+    {
+      sourcemap: true,
+      name: "RTCCore",
+      file: "release/rtc-core.esm.js",
+      format: "esm",
+      indent: false,
+    },
   ],
 };
