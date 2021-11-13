@@ -4,7 +4,6 @@ import { exec, spawn } from "child_process";
 const app = express();
 const PORT = 3000;
 
-const npx = spawn("npx", ["tsc", "-p", "./tsconfig.json", "-w"]);
 const node = spawn("node", ["./release/example/server/index.js"]);
 
 // node.stdout.on('data', data => console.log(data));
