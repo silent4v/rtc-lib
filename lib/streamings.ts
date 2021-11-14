@@ -2,7 +2,7 @@ import { randomTag } from "./utils.js";
 import { Connector } from "./connector.js"
 import { ConnectContext, ConnectRequest, IceSwitchInfo, RTCGuard, RTCState } from "./types.js";
 import { iceConf } from "./config.js";
-import { info, warning } from "./log.js";
+import { info } from "./log.js";
 
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
@@ -62,6 +62,7 @@ export class Streamings {
       remotes.push({
         RTCnativeRef: user.RTCRef,
         connectionState: user.RTCRef.connectionState,
+        sessionId: user.sessionId,
         source: user.audio,
         muted: user.audio.muted,
       });
@@ -117,10 +118,12 @@ export class Streamings {
       info("rtc::candidate", e.candidate);
       if (e && e.candidate) {
         icecandidate.push(e.candidate);
+        this.signal.sendout("rtc::ice_switch", e.candidate, remoteSessionId);
       } else if (pc.iceGatheringState === "complete") {
-        icecandidate.forEach(candidate => {
-          this.signal.sendout("rtc::ice_switch", candidate, remoteSessionId);
-        })
+        console.log("Gather success.");
+        //icecandidate.forEach(candidate => {
+        //  this.signal.sendout("rtc::ice_switch", candidate, remoteSessionId);
+        //})
       }
     }
 
@@ -131,7 +134,7 @@ export class Streamings {
       recvChannel.onmessage = ({ data }) => this.signal.dispatch("rtc::message", { remoteSessionId, username: recvChannel.label, data });
     }
 
-    this.connections.set(remoteSessionId, { RTCRef: pc, media, audio, channel });
+    this.connections.set(remoteSessionId, { RTCRef: pc, sessionId: remoteSessionId, media, audio, channel });
     return pc;
   }
 

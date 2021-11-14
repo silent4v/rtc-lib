@@ -10,7 +10,7 @@ export class Connector {
   public readonly sessionId = randomTag();
   public sockRef: WebSocket;
   public lock = true;
-  public username = null;
+  public username = "@anonymous";
   private reqIter_ = this.gen();
   private incrSeq_ = "_DEFAULT_";
   private registerd_ = false;
@@ -38,7 +38,7 @@ export class Connector {
 
   /* delegate function to streamings */
   public readonly streamings = new Streamings(this);
-  public streamStates = this.streamings.state;
+  public streamStates = () => this.streamings.state;
   public call = this.streamings.call.bind(this.streamings);
   public setDevice = this.streamings.setDevice.bind(this.streamings);
   public setDeviceEnabled = this.streamings.setDeviceEnabled.bind(this.streamings);
@@ -100,7 +100,7 @@ export class Connector {
     this.sockRef.onclose = e => {
       warning("Connector::close", "close");
       this.dispatch("close", e);
-      const { url, protocol } = this.sockRef;
+      const { url } = this.sockRef;
       this.reconnect(new WebSocket(url, /* protocol */));
     }
   }

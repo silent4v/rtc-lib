@@ -61,14 +61,16 @@ export type RTCGuard = (e: { sdp: string, sessionId: string }) => void;
 export type RTCState = {
   RTCnativeRef: RTCPeerConnection;
   connectionState: string;
+  sessionId: string;
   source: HTMLAudioElement;
-  muted: boolean
+  muted: boolean;
 };
 
 export type ConnectRequest = { sdp: RTCSessionDescription, sessionId: string };
 
 export type ConnectContext = { 
-  RTCRef: RTCPeerConnection, 
+  RTCRef: RTCPeerConnection,
+  sessionId: string,
   media: MediaStream,
   audio: HTMLAudioElement,
   channel: RTCDataChannel
