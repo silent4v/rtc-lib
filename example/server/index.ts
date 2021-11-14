@@ -27,12 +27,12 @@ const onRequest = (req: IncomingMessage, res: ServerResponse) => {
 const wss = new WsServer({ noServer: true });
 
 wss.defineInitRoom([
+  "TextRoom01",
+  "TextRoom02",
+  "TextRoom03",
   "AudioRoom01",
   "AudioRoom02",
   "AudioRoom03",
-  "AudioRoom04",
-  "AudioRoom05",
-  "AudioRoom06",
 ])
 
 wss.on("connection", (sock) => {

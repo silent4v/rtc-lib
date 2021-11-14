@@ -77,6 +77,7 @@ export class Streamings {
     const icecandidate: RTCIceCandidate[] = [];
     const channel = pc.createDataChannel(this.signal.username ?? "@anonymous");
     const audio = new Audio;
+    audio.autoplay = true;
     const media = new MediaStream;
     if (this.device_ !== null) {
       this.device_.getTracks().forEach(track => pc.addTrack(track));
@@ -88,11 +89,14 @@ export class Streamings {
       if (user) {
         const [stream] = e.streams;
         user.media = stream;
-        const audioTrack = stream.getAudioTracks();
-
-        const audioStream = new MediaStream;
-        audioTrack.forEach(track => audioStream.addTrack(track));
-        user.audio.srcObject = stream;
+        //const audioTrack = stream.getAudioTracks();
+        //const audioStream = new MediaStream;
+        //audioTrack.forEach(track => );
+        //audioStream.addTrack(e.track)
+        const media = new MediaStream;
+        media.addTrack(e.track);
+        user.audio.srcObject = media;
+        user.audio.play();
       }
     }
 
