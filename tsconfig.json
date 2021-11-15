@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     /* Projects */
-    // "incremental": true,
-    // "tsBuildInfoFile": "./release/tsBuildInfoFile.json",
-    // "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./release/tsBuildInfoFile.json",
+    "composite": true,
 
     /* Language and Environment */
     "target": "es6",
