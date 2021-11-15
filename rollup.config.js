@@ -1,4 +1,6 @@
 import { terser } from "rollup-plugin-terser";
+import commonjs from "@rollup/plugin-commonjs";
+import nodeResolve from "@rollup/plugin-node-resolve";
 
 export default {
   input: "./release/lib/index.js",
@@ -26,4 +28,8 @@ export default {
       indent: false,
     },
   ],
+  plugins: [
+    commonjs(),
+    nodeResolve(),
+  ]
 };

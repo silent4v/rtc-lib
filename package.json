@@ -9,12 +9,15 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "tsc -p ./tsconfig.json",
+    "build": "rollup -c",
     "watch": "tsc -p ./tsconfig.json -w",
-    "lib:build": "npm run prebuild & npx rollup -c",
+    "lib:build": "npm-run-all prebuild build",
     "lib:dev": "npm-run-all --parallel watch demo",
     "demo": "node serve.js"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.6",
     "@types/express": "^4.17.13",
     "@types/node": "^16.11.6",
     "@types/ws": "^8.2.0",

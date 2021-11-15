@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     /* Projects */
-    "incremental": true,
-    "tsBuildInfoFile": "./release/tsBuildInfoFile.json",
-    "composite": true,
+    // "incremental": true,
+    // "tsBuildInfoFile": "./release/tsBuildInfoFile.json",
+    // "composite": true,
 
     /* Language and Environment */
-    "target": "es2018",
+    "target": "es6",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
