@@ -26,7 +26,7 @@
     /* Emit */
     "declaration": true,
     "sourceMap": true,
-    "removeComments": true,
+    "removeComments": false,
     "importHelpers": true,
     "importsNotUsedAsValues": "preserve",
     "downlevelIteration": true,
