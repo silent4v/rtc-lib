@@ -1,3 +1,5 @@
+/** @module log */
+
 const Color = {
   warning: "#977C00",
   info: "#0000E3",
@@ -8,27 +10,49 @@ const Color = {
 
 let debugPattern: RegExp[] = [];
 
+/**
+ * @description
+ * print warning message
+ * 
+ * @param  {string} title
+ * @param  {any?} body
+ */
 export function warning(title: string, body?: any) {
   print("warning", title, body);
 }
-
+/**
+ * @param  {string} title
+ * @param  {any} body
+ */
 export function info(title: string, body?: any) {
   print("info", title, body);
 }
 
+/**
+ * @param  {string} title
+ * @param  {any} body
+ */
 export function success(title: string, body?: any) {
   print("success", title, body);
 }
 
+/**
+ * @param  {string} title
+ * @param  {any} body
+ */
 export function failed(title: string, body?: any) {
   print("failed", title, body);
 }
 
+/**
+ * @param  {string} title
+ * @param  {any} body
+ */
 export function defineGroup(groupName: string, color: string) {
   Object.defineProperty(Color, groupName, { value: color });
 }
 
-/**
+/** 
  * @description
  * Accept a string as the regex rule, when using print(), if the `title` matches the rule, the message will be printed
  * 
@@ -54,7 +78,9 @@ export function debug(pattern: string, trace = true) {
 
 
 /**
+ * @description
  * use developer define group & print to console
+ * 
  * @example
  * import { defineGroup, output } from "log.js"
  * defineGroup("test", "red");

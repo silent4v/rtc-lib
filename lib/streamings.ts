@@ -4,6 +4,7 @@ import { ConnectContext, ConnectRequest, IceSwitchInfo, RTCGuard, RTCState } fro
 import { iceConf } from "./config.js";
 import { info } from "./log.js";
 
+/** @class */
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
   public streamEnabled = false;
@@ -39,6 +40,9 @@ export class Streamings {
     });
   }
 
+  /**
+   * @param  {string} sessionId
+   */
   public async call(sessionId: string) {
     const replyToken = randomTag();
     const RTCRef = this.createPeerConnection(sessionId);
@@ -73,6 +77,9 @@ export class Streamings {
     }
   }
 
+  /**
+   * @param  {string} remoteSessionId
+   */
   private createPeerConnection(remoteSessionId: string) {
     const pc = new RTCPeerConnection(iceConf);
     const icecandidate: RTCIceCandidate[] = [];
@@ -138,10 +145,16 @@ export class Streamings {
     return pc;
   }
 
+  /**
+   * @param  {MediaStream} media
+   */
   public setDevice(media: MediaStream) {
     this.device_ = media;
   }
 
+  /**
+   * @param  {boolean} enable
+   */
   public setDeviceEnabled(enable: boolean) {
     if (this.device_) {
       this.streamEnabled = enable;
@@ -151,13 +164,22 @@ export class Streamings {
     }
   }
 
-  public setRemoteMuted(sessionId, mute: boolean) {
+  /**
+   * @argument  {string} sessionId
+   * @arg  {boolean} mute
+   * 
+
+   */
+  public setRemoteMuted(sessionId: string, mute: boolean) {
     const user = this.connections.get(sessionId);
     if (user) {
       user.audio.muted = mute;
     }
   }
 
+  /**
+   * @param {RTCGuard} fn
+   */
   public setGuard(fn: RTCGuard) {
     if (typeof fn === "function")
       this.connectGuard_ = fn;

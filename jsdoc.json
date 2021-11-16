@@ -1,7 +1,7 @@
 {
   "tags": {
     "allowUnknownTags": true,
-    "dictionaries": ["jsdoc"]
+    "dictionaries": ["jsdoc", "closure"]
   },
   "source": {
     "include": "./release/lib",
@@ -14,27 +14,30 @@
     "destination": "docs/",
     "recurse": true,
     "verbose": true,
-    "template": "node_modules/docdash",
-    "docdash": {
-      "search": true,
-      "sectionOrder": [
-        "Modules",
-        "Classes",
-        "Externals",
-        "Events",
-        "Namespaces",
-        "Mixins",
-        "Tutorials",
-        "Interfaces"
-      ]
-    }
+    "template": "node_modules/docdash"
   },
   "templates": {
-    "cleverLinks": false,
-    "monospaceLinks": false
+    "cleverLinks": true,
+    "monospaceLinks": true,
+    "default": {
+      "staticFiles": {
+        "paths": ["./lib/"]
+      }
+    }
   },
   "docdash": {
+    "sectionOrder": [
+      "Classes",
+      "Modules",
+      "Externals",
+      "Events",
+      "Namespaces",
+      "Mixins",
+      "Tutorials",
+      "Interfaces"
+    ],
     "search": true,
-    "collapse": true
+    "sort": false,
+    "typedefs": true
   }
 }

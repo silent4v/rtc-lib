@@ -1,3 +1,5 @@
+/** @module utils */
+
 /**
  * @description
  * Simple uuid generator, return length 16's string

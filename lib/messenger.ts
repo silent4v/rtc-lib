@@ -2,6 +2,7 @@ import type { EventCallback, EventTypes, Message } from "./types.js";
 import { Connector } from "./connector.js";
 import { success, warning } from "./log.js";
 
+/** @class */
 export class Messenger {
   public textChannel = new Set<string>();
   public inbox: Message[] = [];

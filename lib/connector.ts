@@ -6,25 +6,41 @@ import { EventScheduler } from "./events.js";
 import { Streamings } from "./streamings.js";
 const { parse, stringify } = JSON;
 
+/** 
+ * @class
+ */
 export class Connector {
-  public readonly sessionId = randomTag();
   public sockRef: WebSocket;
-  public lock = true;
+
+  /** @member {string} */
+  public readonly sessionId = randomTag();
+
+  /**
+   * @member {string=}
+   */
   public username = "@anonymous";
+
   private reqIter_ = this.gen();
   private incrSeq_ = "_DEFAULT_";
   private registerd_ = false;
 
-  /* delegate function to events */
-  public readonly events = new EventScheduler;
   public trace = (pattern: string = "*") => debug(pattern);
   public untrace = (pattern: string) => debug(pattern, false);
+
+  /**
+   * @readonly
+   * @member {EventScheduler}
+   */
+  public readonly events = new EventScheduler;
   public dispatch = this.events.dispatch.bind(this.events);
   public on = this.events.on.bind(this.events);
   public once = this.events.once.bind(this.events);
   public off = this.events.off.bind(this.events);
 
-  /* delegate function to messenger */
+  /**
+   * @readonly
+   * @member {Messenger}
+   */
   public readonly messenger = new Messenger(this);
   public talk = this.messenger.talk.bind(this.messenger);
   public reserve = this.messenger.reserve.bind(this.messenger);
@@ -36,7 +52,10 @@ export class Connector {
   public notify = this.messenger.notify.bind(this.messenger);
   public cancelNotify = this.messenger.cancelNotify.bind(this.messenger);
 
-  /* delegate function to streamings */
+  /**
+   * @readonly
+   * @member {Streamings}
+   */
   public readonly streamings = new Streamings(this);
   public streamStates = () => this.streamings.state;
   public call = this.streamings.call.bind(this.streamings);
@@ -45,7 +64,15 @@ export class Connector {
   public setRemoteMuted = this.streamings.setRemoteMuted.bind(this.streamings);
   public setGuard = this.streamings.setGuard.bind(this.streamings);
 
+  /**
+   * @constructor
+   * @param  {string} sockOrigin - websocket server URL. Ex: **wss://{domain}/{path}**
+   * @param  {string|string[]} [subProtocols] - custom define protocols, put in Header **Sec-WebSocket-Protocol**
+   */
   constructor(sockOrigin: string, subProtocols?: string | string[]) {
+    /**
+     * @member {WebSocket}
+     */
     this.sockRef = new WebSocket(sockOrigin, subProtocols);
     this.initialize();
     this.reqIter_.next();
@@ -56,6 +83,7 @@ export class Connector {
   }
 
   /**
+   * @private
    * @description
    * Initialize the event name iterator, which will ensure that the request token will never be repeated.
    */
@@ -106,10 +134,13 @@ export class Connector {
   }
 
   /**
+   * 
    * @description
    * When websocket disconnect, it will try reconnect to sock server,
    * default will retry 3 time, eveny 1s retry.
    * if can't connect to socket server, throw Error.
+   * 
+   * @param {WebSocket} sock 
    */
   private async reconnect(sock: WebSocket) {
     let retryTime = 3;
@@ -167,6 +198,10 @@ export class Connector {
   /**
    * @description
    * Emit DataTuple to server, simple packed data to DataTuple.
+   * @async
+   * @param {string} eventType
+   * @param {any} payload
+   * @param {...any} [flags]
    */
   public async sendout(eventType: string, payload: any, ...flags: any[]) {
     await waiting(this.sockRef);
@@ -177,19 +212,24 @@ export class Connector {
 
   /**
    * @description
-   * Emit DataTuple to server, this DataTuple use `request::` namespace event and include flags `replyToken`,
-   * when server reply, dispatch event to event::replyToken, return Promise.resolve(server_response)
-   * If the response timeout, then return Promise.reject(`{event} timeout`);
-   * 
+   * Emit DataTuple to server, this DataTuple use **request::** namespace event and include flags **replyToken**,
+   * when server reply, dispatch event to **{eventType}::{replyToken}**, return **Promise.resolve(response_data)**
+   * If the response timeout, then return **Promise.reject(`{event} timeout`)**;
+   * @async
+   * @param  {string} eventType
+   * @param  {any} payload
+   * @param  {...any} [flags]
+   *
    * @example
    * rtc.request("room::list").then( list => console.log(list) );
    * 
-   * //or if in async function:
+   * @example
    * try {
    *  const roomList = await rtc.request("room::list")
    * } catch (err) {
    *  console.log(err) // room::list response timeout.
    * }
+   *
    */
   public async request<T = any>(eventType: string, payload: any, ...flags: any[]) {
     const defaultTimeoutMilliSec = 3000;

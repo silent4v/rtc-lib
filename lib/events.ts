@@ -6,6 +6,7 @@ const log = (title: string, body: any) => {
   print("Event", title, body);
 }
 
+/** @class */
 export class EventScheduler implements OnEventType {
   private prefix_ = "_ev_";
   private events_ = new Map<string, EventCallback<any>[]>();

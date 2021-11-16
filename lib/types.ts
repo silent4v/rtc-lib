@@ -56,8 +56,19 @@ export type Message = {
 /* rtc */
 export type RTCChangeData = { RTCPeer: RTCPeerConnection, sessionId: string };
 
-export type RTCGuard = (e: { sdp: string, sessionId: string }) => void;
+export interface RTCGuard { 
+  (e: { sdp: string, sessionId: string }): void 
+};
 
+
+/**
+ * @typedef RTCState
+ * @prop {RTCPeerConnection} RTCnativeRef
+ * @prop {string} connectionState
+ * @prop {string} sessionId
+ * @prop {HTMLAudioElement} source
+ * @prop {boolean} muted
+ */
 export type RTCState = {
   RTCnativeRef: RTCPeerConnection;
   connectionState: string;
@@ -68,7 +79,7 @@ export type RTCState = {
 
 export type ConnectRequest = { sdp: RTCSessionDescription, sessionId: string };
 
-export type ConnectContext = { 
+export type ConnectContext = {
   RTCRef: RTCPeerConnection,
   sessionId: string,
   media: MediaStream,
@@ -79,3 +90,5 @@ export type ConnectContext = {
 export type IceSwitchInfo = { candidate: RTCIceCandidateInit, sessionId: string };
 
 export type ChannelMessage = { remoteSessionId: string, username: string, data: string }
+
+export {};
