@@ -46,7 +46,7 @@ export class Streamings {
   public async call(sessionId: string) {
     const replyToken = randomTag();
     const RTCRef = this.createPeerConnection(sessionId);
-    const offer = await RTCRef.createOffer();
+    const offer = await RTCRef.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
     await RTCRef.setLocalDescription(offer);
 
     /* wait for response */
@@ -81,7 +81,7 @@ export class Streamings {
    * @param  {string} remoteSessionId
    */
   private createPeerConnection(remoteSessionId: string) {
-    const pc = new RTCPeerConnection(iceConf);
+    const pc = new RTCPeerConnection();
     const icecandidate: RTCIceCandidate[] = [];
     const channel = pc.createDataChannel(this.signal.username ?? "@anonymous");
     const audio = new Audio;
