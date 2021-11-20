@@ -18,8 +18,8 @@ function applyTrait<T extends Object, U>(
 }
 
 export class ClientTrait implements IClientTrait {
-  public username = null;
-  public sessionId = null;
+  public username = null as any;
+  public sessionId = null as any;
   public currentRoom = null;
   public registered = false;
 

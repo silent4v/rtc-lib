@@ -47,12 +47,12 @@ export class WsServer extends WebSocketServer implements IServer {
   }
 
   public enterRoom(roomId: string, client: WsClient) {
+    console.log("Enter room: %s to %s", client.username?.trim(), roomId?.trim());
     const rooms = this.shareObj.rooms;
     if (rooms.has(roomId)) {
       rooms.get(roomId)!.push(client);
     } else {
       rooms.set(roomId, [client]);
-      console.log(rooms);
     }
   }
 

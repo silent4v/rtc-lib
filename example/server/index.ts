@@ -47,6 +47,7 @@ wss.on("connection", (sock) => {
     client.username = data.username;
     client.registered = true;
     if (client.sessionId) {
+      console.log("reg:", client.sessionId?.trim(), data.username?.trim());
       wss.userRegister(client.sessionId, client);
       client.reply(replyToken, 1);
     }

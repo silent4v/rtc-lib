@@ -4,11 +4,11 @@
   "description": "software develop kit for real-time interactive",
   "module": "es2020",
   "type": "module",
-  "main": "index.js",
+  "main": "release/lib/index.js",
   "author": "YanHau <yhchen.space@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lib:build": "npm-run-all prebuild:tsc build:rollup",
+    "lib:build": "npm-run-all build:tsc build:rollup",
     "build:tsc": "tsc -p ./tsconfig.json",
     "build:rollup": "rollup -c",
     "lib:dev": "npm-run-all dev:watch dev:demo",

@@ -36,18 +36,20 @@ export function textServerHooks(server: WsServer, client: WsClient) {
     console.log(roomId);
     const room = textChannel.get(roomId);
     if (room) {
-      console.log(room);
+      console.log("%s send to %s", client.username, roomId);
       room
         .filter(userTag => userTag !== client.sessionId)
         .forEach(userTag => {
-          console.log(userTag);
           const user = userTable.get(userTag);
-          if (user) user.reply("text::message", {
-            roomId,
-            message,
-            from: client.sessionId + "::" + client.username,
-            at: Date.now()
-          })
+          if (user) {
+            console.log("To: ", user.username?.trim());
+            user.reply("text::message", {
+              roomId,
+              message,
+              from: client.sessionId + "::" + client.username,
+              at: Date.now()
+            })
+          }
         });
       client.reply(replyToken, 1);
     }
