@@ -6,7 +6,7 @@
     "composite": true,
 
     /* Language and Environment */
-    "target": "es6",
+    "target": "es2018",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

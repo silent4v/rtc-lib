@@ -83,7 +83,7 @@ export class Messenger {
    * define a channel notification event, when the subscribed channel receives a message, invoke event.
    */
   public notify(textChannel: string, callback: EventCallback<Message>) {
-    this.signal.on(`notify::${textChannel}` as EventTypes, callback);
+    this.signal.on(`notify::${textChannel}` as any, callback);
   }
   
   /**
