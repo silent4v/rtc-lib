@@ -4,7 +4,7 @@
   "description": "software develop kit for real-time interactive",
   "module": "es2020",
   "type": "module",
-  "main": "index.js",
+  "main": "release/lib/index.js",
   "author": "YanHau <yhchen.space@gmail.com>",
   "license": "MIT",
   "scripts": {
