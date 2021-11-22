@@ -8,13 +8,12 @@
   "author": "YanHau <yhchen.space@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lib:build": "npm-run-all prebuild:tsc build:rollup",
-    "build:tsc": "tsc -p ./tsconfig.json",
-    "build:rollup": "rollup -c",
-    "lib:dev": "npm-run-all dev:watch dev:demo",
-    "dev:watch": "tsc -p ./tsconfig.json -w",
-    "dev:demo": "node serve.js",
-    "docs:build": "jsdoc -c jsdoc.json",
+    "tsc-build": "tsc -p ./tsconfig.json",
+    "tsc-watch": "tsc -p ./tsconfig.json -w",
+    "rollup": "rollup -c rollup.config.js",
+    "build": "run-s tsc-build rollup",
+    "serve": "node serve.js",
+    "docs:build": "npx jsdoc -c jsdoc.json",
     "docs": "npm-run-all build:tsc docs:build"
   },
   "devDependencies": {
@@ -28,6 +27,7 @@
     "rollup": "^2.59.0",
     "rollup-plugin-terser": "^7.0.2",
     "taffydb": "^2.7.3",
+    "ts-node": "^10.4.0",
     "tslib": "^2.3.1",
     "typescript": "^4.4.4"
   },
