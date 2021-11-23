@@ -92,14 +92,14 @@ export function clientInit(sock: WebSocket) {
       value: (channelName: string) => {
         channelRef.subscribe(sessionId, channelName);
         self.subscribedChannel.add(channelName);
-        methodDebug("current subscribe: %o", self.subscribedChannel);
+        methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
       }
     },
     unsubscribe: {
       value: (channelName: string) => {
         channelRef.unsubscribe(sessionId, channelName);
         self.subscribedChannel.delete(channelName);
-        methodDebug("current unsubscribe: %o", self.subscribedChannel);
+        methodDebug("%s current unsubscribe: %o", self.sid, self.subscribedChannel);
       }
     },
     only: {
@@ -111,7 +111,7 @@ export function clientInit(sock: WebSocket) {
         /* Trace new channel */
         channelRef.subscribe(sessionId, channelName);
         self.subscribedChannel.add(channelName);
-        methodDebug("current subscribe: %o", self.subscribedChannel);
+        methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
       }
     },
     sendout: {
