@@ -47,5 +47,5 @@
     "skipLibCheck": true
   },
   "include": ["./lib/**/*", "./example/**/*"],
-  "exclude": ["./release/**/*"]
+  "exclude": ["./release/**/*", "**/*.spec.ts"]
 }
