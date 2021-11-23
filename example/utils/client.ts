@@ -49,8 +49,7 @@ export function clientInit(sock: WebSocket) {
     if (!result.err) {
       const { eventType, payload, $replyToken } = result.value;
       if (eventType && typeof eventType === "string") {
-        sock.emit(eventType, {...payload, $replyToken});
-        eventDebug(result.value);
+        sock.emit(eventType, payload, $replyToken);
       }
     }
   });
@@ -66,7 +65,7 @@ export function clientInit(sock: WebSocket) {
       writable: false
     },
     sid: {
-      value: sessionId.slice(0,8),
+      value: sessionId.slice(0, 8),
       writable: false
     },
     subscribedChannel: {
@@ -117,7 +116,6 @@ export function clientInit(sock: WebSocket) {
     },
     sendout: {
       value: <T = any>(eventType: string, payload: T) => {
-        console.log(eventType, payload);
         const data = JSON.stringify({ eventType, payload });
         sock.send(data);
       }

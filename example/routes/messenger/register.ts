@@ -2,32 +2,32 @@ import type { Client } from "../../utils/client.js";
 import type { Server } from "../../utils/server.js";
 import { channelRef } from "../../utils/channel.js";
 
-import { SubscribeRequest, TalkMessageRequest, TalkMessageResponse, UnsubscribeRequest } from "./messenger.dto.js";
+import { TalkMessageResponse } from "./messenger.dto.js";
 import debug from "debug";
 
 export function regMessengerEvent(server: Server, client: Client) {
   const messengerDebug = debug("Messenger");
+  const EXIST = 1;
+  const NOT_EXIST = 2;
 
-  client.on("request::text::subscribe", ({ channelName, $replyToken }: SubscribeRequest) => {
+  client.on("request::text::subscribe", (channelName, $replyToken) => {
     const exists = channelRef.container.get(channelName) !== undefined;
     client.subscribe(channelName);
-    client.sendout($replyToken, { state: exists ? 1 : 0 });
+    client.sendout($replyToken, { state: exists ? EXIST : NOT_EXIST });
     messengerDebug("'%s' subscribe '%s'", `${client.sid}::${client.username}`, channelName);
   });
 
-  client.on("request::text::unsubscribe", ({ channelName, $replyToken }: UnsubscribeRequest) => {
+  client.on("request::text::unsubscribe", (channelName, $replyToken) => {
     const exists = channelRef.container.get(channelName) !== undefined;
-    if (exists) {
-      client.unsubscribe(channelName);
-    }
-    client.sendout($replyToken, { state: exists ? 1 : 0 });
+    if (exists) client.unsubscribe(channelName);
+    client.sendout($replyToken, { state: exists ? EXIST : NOT_EXIST });
     messengerDebug("%s unsubscribe %s", `${client.sid}::${client.username}`, channelName);
   });
 
-  client.on("request::text::message", ({ channelName, message, $replyToken }: TalkMessageRequest) => {
+  client.on("request::text::message", ({ channelName, message }, $replyToken) => {
     const clients = channelRef.container.get(channelName);
-    if(!clients) return client.sendout($replyToken, 0);
-    
+    if (!clients) return client.sendout($replyToken, 0);
+
     const recvTime = Date.now();
     const data: TalkMessageResponse = {
       channelName,
