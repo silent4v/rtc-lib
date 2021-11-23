@@ -1,6 +1,7 @@
 import type { Client } from "../../utils/client.js";
 import type { Server } from "../../utils/server.js";
-import { CandidateExchangeRequest, SdpForwardRequest } from "./rtc.dto.js";
+
+import { CandidateExchangeRequest, SdpForwardRequest, SdpForwardResponse } from "./rtc.dto.js";
 import debug from "debug";
 
 export function regRtcEvent(server: Server, client: Client) {
@@ -14,13 +15,13 @@ export function regRtcEvent(server: Server, client: Client) {
 
     targetUser.sendout("rtc::request", { sdp, sessionId, $replyToken });
     matchTable.set($replyToken, client.sessionId);
-    rtcDebug("%s call %s", client.sid, targetUser.sid);
+    rtcDebug("%s calls %s", client.sid, targetUser.sid);
     setTimeout(function noneResponse() {
       matchTable.delete($replyToken);
     }, waitingTimelimit)
   });
 
-  client.on("rtc::response", ({ sdp, sessionId, $replyToken }: SdpForwardRequest) => {
+  client.on("rtc::response", ({ sdp, $replyToken }: SdpForwardResponse) => {
     const originCallerId = matchTable.get($replyToken);
     const originCaller = server.users.get(originCallerId ?? "");
     if (!originCaller) return;

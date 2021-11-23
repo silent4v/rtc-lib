@@ -6,7 +6,6 @@ export interface SdpForwardRequest {
 
 export interface SdpForwardResponse {
   sdp: typeof RTCSessionDescription;
-  sessionId: string;
   $replyToken: string;
 }
 
