@@ -22,6 +22,7 @@ interface Result<T = any> {
 export interface ClientExtension {
   username: string;
   sessionId: string;
+  sid: string;
   subscribedChannel: Set<string>;
   currentRoom: string;
   subscribe: (channelName: string) => void;
@@ -57,6 +58,9 @@ export function clientInit(sock: WebSocket) {
     },
     sessionId: {
       value: sessionId
+    },
+    sid: {
+      value: sessionId.slice(0,8)
     },
     subscribedChannel: {
       value: new Set()
