@@ -113,9 +113,9 @@ export class Connector {
       });
 
       try {
-        const [eventType, payload, ...flags] = parse(data);
+        const { eventType, payload } = parse(data);
         if (eventType && typeof eventType === "string") {
-          this.dispatch(eventType, payload, ...flags);
+          this.dispatch(eventType, payload);
           return;
         }
         failed("Connector::onmessage", "Response format isn't DataTuple.");
@@ -203,11 +203,11 @@ export class Connector {
    * @param {any} payload
    * @param {...any} [flags]
    */
-  public async sendout(eventType: string, payload: any, ...flags: any[]) {
+  public async sendout(eventType: string, payload: any, $replyToken: string = "") {
     await waiting(this.sockRef);
-    const packetData = stringify([eventType, payload, ...flags]);
+    const packetData = stringify({ eventType, payload, $replyToken });
     this.sockRef.send(packetData);
-    info("Connector::sendData", [eventType, payload, ...flags]);
+    info("Connector::sendData", { eventType, payload, $replyToken });
   }
 
   /**
@@ -231,11 +231,11 @@ export class Connector {
    * }
    *
    */
-  public async request<T = any>(eventType: string, payload: any, ...flags: any[]) {
+  public async request<T = any>(eventType: string, payload: any) {
     const defaultTimeoutMilliSec = 3000;
     const reqEvent = `request::${eventType}`;
     this.reqIter_.next(`${eventType}`)
-    this.sendout(reqEvent, payload, this.incrSeq_, flags);
+    this.sendout(reqEvent, payload, this.incrSeq_);
 
     /* packed the return value */
     return new Promise<DataTuple<T>>((resolve, timeout) => {
