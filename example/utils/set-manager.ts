@@ -1,3 +1,8 @@
+type StateList = {
+  name: string,
+  clients: string[],
+}
+
 export class SetManager {
   public container = new Map<string, Set<string>>();
 
@@ -13,10 +18,22 @@ export class SetManager {
     return this.container;
   }
 
+  public list(name = "$LISTALL"): StateList[] {
+    if (name === "$LISTALL") {
+      const pairs = [...this.container.entries()];
+      return pairs.map(([name, clients]) => ({ name, clients: [...clients.values()] }));
+    }
+
+    return [{
+      name,
+      clients: [...this.container.get(name)?.values() ?? []]
+    }];
+  }
+
   public refresh() {
     const keys = [...this.container.keys()];
-    keys.forEach( k => {
-      if(this.container.get(k)!.size <= 0)
+    keys.forEach(k => {
+      if (this.container.get(k)!.size <= 0)
         this.container.delete(k);
     });
   }

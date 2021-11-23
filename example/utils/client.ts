@@ -79,14 +79,13 @@ export function clientInit(sock: WebSocket) {
       value: () => {
         roomRef.container.get(self.currentRoom)?.delete(self.sessionId);
         self.currentRoom = "$NONE";
-        methodDebug("current room: %o", self.currentRoom);
       }
     },
     enter: {
       value: (roomName: string) => {
+        methodDebug("from %s to %s", self.currentRoom, roomName);
         roomRef.enter(self.sessionId, roomName);
         self.currentRoom = roomName;
-        methodDebug("current room: %o", self.currentRoom);
       }
     },
     subscribe: {

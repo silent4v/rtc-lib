@@ -1,8 +1,9 @@
 import { SetManager } from "./set-manager.js";
 
 type ChannelState = { 
-  channelName: string,
-  clients: string[]
+  name: string,
+  clients: string[],
+  type: "$channel"
 }
 
 export class Channel extends SetManager {
@@ -20,16 +21,13 @@ export class Channel extends SetManager {
   }
 
   public list(channelName: string = "$LISTALL"): ChannelState[] {
-    if (channelName === "$LISTALL") {
-      return [...this.container.entries()].map(([channelName, clients]) => ({ channelName, clients: [...clients.values()] }));
-    }
-
-    return [{
-      channelName,
-      clients: [...this.container.get(channelName)?.values() ?? []]
-    }];
+    const basic = super.list(channelName);
+    return basic.map(({name, clients}) => ({
+      name, 
+      clients,
+      type: "$channel"
+    }));
   }
-
 }
 
 export const channelRef = Channel.instance;

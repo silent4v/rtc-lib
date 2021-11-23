@@ -75,12 +75,14 @@ describe("Client Init", () => {
     expect(channelRef.container.size).toBe(2);
     expect(channelRef.list()).toEqual([
       {
-        channelName: "testing-ch1",
-        clients: [client.sessionId]
+        name: "testing-ch1",
+        clients: [client.sessionId],
+        type: "$channel"
       },
       {
-        channelName: "testing-ch2",
-        clients: [client.sessionId]
+        name: "testing-ch2",
+        clients: [client.sessionId],
+        type: "$channel"
       },
     ]);
 

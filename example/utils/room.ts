@@ -1,9 +1,10 @@
 import { SetManager } from "./set-manager.js";
 import { userTable } from "./server.js";
 
-type RoomState = {
-  roomName: string,
-  clients: string[]
+type RoomState = { 
+  name: string,
+  clients: string[],
+  type: "$room"
 }
 
 export class Room extends SetManager {
@@ -16,6 +17,15 @@ export class Room extends SetManager {
       this.update(roomName).get(roomName)!.add(sid);
     }
     return this;
+  }
+
+  public list(channelName: string = "$LISTALL"): RoomState[] {
+    const basic = super.list(channelName);
+    return basic.map(({name, clients}) => ({
+      name, 
+      clients,
+      type: "$room"
+    }));
   }
 }
 

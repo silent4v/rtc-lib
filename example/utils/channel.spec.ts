@@ -62,10 +62,10 @@ test("append", () => {
   channel.append("c4");
 
   expect(channel.list()).toStrictEqual([
-    { channelName: "c1", clients: [] },
-    { channelName: "c2", clients: [] },
-    { channelName: "c3", clients: [] },
-    { channelName: "c4", clients: [] },
+    { name: "c1", clients: [], type: "$channel" },
+    { name: "c2", clients: [], type: "$channel" },
+    { name: "c3", clients: [], type: "$channel" },
+    { name: "c4", clients: [], type: "$channel" },
   ])
 });
 
@@ -113,16 +113,19 @@ test("list - real", () => {
 
   expect(channel.list()).toStrictEqual([
     {
-      channelName: "c1",
-      clients: ["u01", "u13", "u16", "u18", "u64", "u24"]
+      name: "c1",
+      clients: ["u01", "u13", "u16", "u18", "u64", "u24"],
+      type: "$channel"
     },
     {
-      channelName: "c2",
-      clients: ["u45", "u48", "u04", "u40", "u64"]
+      name: "c2",
+      clients: ["u45", "u48", "u04", "u40", "u64"],
+      type: "$channel"
     },
     {
-      channelName: "c3",
-      clients: ["u10", "u26", "u87", "u105"]
+      name: "c3",
+      clients: ["u10", "u26", "u87", "u105"],
+      type: "$channel"
     },
   ]);
 
@@ -139,16 +142,19 @@ test("list - real", () => {
 
   expect(channel.list()).toStrictEqual([
     {
-      channelName: "c1",
-      clients: ["u16", "u18", "u24"]
+      name: "c1",
+      clients: ["u16", "u18", "u24"],
+      type: "$channel"
     },
     {
-      channelName: "c2",
-      clients: ["u48", "u40", "u64"]
+      name: "c2",
+      clients: ["u48", "u40", "u64"],
+      type: "$channel"
     },
     {
-      channelName: "c3",
-      clients: []
+      name: "c3",
+      clients: [],
+      type: "$channel"
     },
   ]);
 });
