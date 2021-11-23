@@ -57,19 +57,23 @@ export function clientInit(sock: WebSocket) {
   let self = sock as Client;
   Object.defineProperties(sock, {
     username: {
-      value: "",
+      value: "$NONE",
+      writable: true
     },
     sessionId: {
-      value: sessionId
+      value: sessionId,
+      writable: false
     },
     sid: {
-      value: sessionId.slice(0,8)
+      value: sessionId.slice(0,8),
+      writable: false
     },
     subscribedChannel: {
       value: new Set()
     },
     currentRoom: {
-      value: "$NONE"
+      value: "$NONE",
+      writable: true
     },
     exit: {
       value: () => {
@@ -81,6 +85,7 @@ export function clientInit(sock: WebSocket) {
     enter: {
       value: (roomName: string) => {
         roomRef.enter(self.sessionId, roomName);
+        self.currentRoom = roomName;
         methodDebug("current room: %o", self.currentRoom);
       }
     },
