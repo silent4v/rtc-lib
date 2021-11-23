@@ -50,6 +50,7 @@ export function clientInit(sock: WebSocket) {
       const { eventType, payload, $replyToken } = result.value;
       if (eventType && typeof eventType === "string") {
         sock.emit(eventType, payload, $replyToken);
+        eventDebug(eventType, payload, $replyToken);
       }
     }
   });
