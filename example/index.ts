@@ -1,18 +1,26 @@
 import express from "express";
 import { createServer } from "http";
 import { performance } from "perf_hooks";
+import { resolve } from "path";
+import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
 import { regMessengerEvent } from "./routes/messenger/register.js";
 import { clientInit } from "./utils/client.js";
 import { serverInit } from "./utils/server.js";
 
 const PORT = 30000;
-
+const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
+const publicPath = resolve(DIRNAME, "..", "..", "public");
+const libPath = resolve(DIRNAME, "..");
 /* RESTful Application */
 const httpServer = express();
 
+console.log({DIRNAME, publicPath, libPath});
 httpServer
-  .use(express.json())
+  .use("/", express.static(publicPath))
+  .use("/lib", express.static(libPath));
+
+httpServer
   .get("/health", (_, res) => {
     const runTime = (performance.now() / 1000) | 0;
     let h = (runTime / 3600) | 0;
