@@ -48,8 +48,8 @@ export class Messenger {
    * inbox will receive the message
    */
   public async subscribe(textChannel: string) {
-    const [done] = await this.signal.request<boolean>("text::subscribe", textChannel);
-    if (done) this.textChannel.add(textChannel);
+    const { state } = await this.signal.request<{ state: number }>("text::subscribe", textChannel);
+    if (state) this.textChannel.add(textChannel);
   }
 
   /**
@@ -57,8 +57,8 @@ export class Messenger {
    * Reomve a channel from the tracking list.
    */
   public async unsubscribe(textChannel: string) {
-    const [done] = await this.signal.request<boolean>("text::unsubscribe", textChannel);
-    if (done) this.textChannel.delete(textChannel);
+    const { state } = await this.signal.request<{ state: number }>("text::unsubscribe", textChannel);
+    if (state) this.textChannel.delete(textChannel);
   }
 
   /**
@@ -75,7 +75,7 @@ export class Messenger {
    * await this.talk("channel03", "some message");
    */
   public talk(textChannel: string, message: string) {
-    return this.signal.request("text::message", { roomId: textChannel, message });
+    return this.signal.request("text::message", { channelName: textChannel, message });
   }
 
   /**
@@ -85,7 +85,7 @@ export class Messenger {
   public notify(textChannel: string, callback: EventCallback<Message>) {
     this.signal.on(`notify::${textChannel}` as any, callback);
   }
-  
+
   /**
    * @description
    * remove a channel notification event.

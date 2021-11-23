@@ -13,7 +13,7 @@ export class Connector {
   public sockRef: WebSocket;
 
   /** @member {string} */
-  public readonly sessionId = randomTag();
+  public sessionId = "";
 
   /**
    * @member {string=}
@@ -76,10 +76,6 @@ export class Connector {
     this.sockRef = new WebSocket(sockOrigin, subProtocols);
     this.initialize();
     this.reqIter_.next();
-    Object.defineProperty(this, "sessionId", {
-      writable: false,
-      configurable: false,
-    });
   }
 
   /**
@@ -151,7 +147,7 @@ export class Connector {
         this.sockRef = sock;
         this.initialize();
         this.dispatch("reconnect", null);
-        if (this.registerd_) this.register();
+        if (this.registerd_) this.register(this.username);
         success("Connector::reconnect", "reconnect");
         break;
       }
@@ -167,9 +163,14 @@ export class Connector {
    * @description
    * register self to websocket server
    */
-  public register() {
-    const result = this.request<boolean>("register", { username: this.username, sessionId: this.sessionId });
-    return result.then(e => { this.registerd_ = true });
+  public register(username: string) {
+    this.username = username;
+    const result = this.request<{ sessionId: string }>("register", { username });
+    return result.then(({ sessionId }) => { 
+      this.registerd_ = true; 
+      this.sessionId = sessionId;
+      return sessionId;
+    });
   };
 
 
@@ -238,13 +239,13 @@ export class Connector {
     this.sendout(reqEvent, payload, this.incrSeq_);
 
     /* packed the return value */
-    return new Promise<DataTuple<T>>((resolve, timeout) => {
+    return new Promise<T>((resolve, timeout) => {
       const timer = setTimeout(() => {
         timeout(`${eventType} response timeout`);
         failed("Connector::res-timeout", `default timeout is ${defaultTimeoutMilliSec} ms`)
       }, defaultTimeoutMilliSec);
 
-      this.once(this.incrSeq_, (...data) => {
+      this.once(this.incrSeq_, (data) => {
         clearTimeout(timer);
         resolve(data);
         info("Connector::response", {
