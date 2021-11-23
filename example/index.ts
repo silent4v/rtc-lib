@@ -7,6 +7,8 @@ import { WebSocketServer } from "ws";
 import { regMessengerEvent } from "./routes/messenger/register.js";
 import { clientInit } from "./utils/client.js";
 import { serverInit } from "./utils/server.js";
+import { regRtcEvent } from "./routes/rtc/register.js";
+import { regRoomEvent } from "./routes/room/regester.js";
 
 const PORT = 30000;
 const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
@@ -35,6 +37,13 @@ sockServer.on("connection", rawSock => {
   const client = clientInit(rawSock);
   sockServer.users.set(client.sessionId, client);
   regMessengerEvent(sockServer, client);
+  regRtcEvent(sockServer, client);
+  regRoomEvent(sockServer, client);
+
+  client.on("request::ping-pong", ({ $replyToken , ...payload }) => {
+    /* For testing event, return origin payload */
+    client.sendout($replyToken, payload);
+  })
 });
 
 /* Raw Http server */

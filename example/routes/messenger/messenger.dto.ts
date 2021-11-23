@@ -6,9 +6,8 @@ export interface SubscribeRequest {
 export interface SubscribeResponse {
   state: number;
   /* 
-    0 - The user did not move
-    1 - The user moves to an existing room
-    2 - The user creates a room and enters
+    0 - The user sub/unsub an existing room
+    1 - The user sub/unsub an NOT existing room
    */
 }
 
