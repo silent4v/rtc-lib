@@ -10,15 +10,63 @@
     body {
       font-family: "consolas";
     }
+
+    .log {
+      margin: 0.5em 0;
+    }
   </style>
 </head>
 
 <body>
   <h1>Example</h1>
-  <hr>
-  <button>START Connection</button>
-  <button>START Connection</button>
+  <hr />
+  <!-- Connecting -->
+  <h2>Open Connect & Register</h2>
+  <p>
+    <button id="connectionBtn">START Connection</button>
+    <button id="registerBtn">Register</button>
+  </p>
+  <p>Current connect state: <span id="readyState"></span></p>
+  <p>My SessionId: <span id="SessionId"></span></p>
+
+  <!-- Try Send Data to server -->
+  <hr />
+  <h2>Try send data</h2>
+  <p>
+    <button id="requestBtn">Send Data</button>
+    <select id="eventTypeSelect">
+      <option value="ping-pong">ping-pong</option>
+      <option value="text::subscribe">text::subscribe</option>
+      <option value="text::unsubscribe">text::unsubscribe</option>
+      <option value="text::message">text::message</option>
+    </select>
+  </p>
+  <textarea id="requestData" cols="50" rows="10" placeholder="Write any data"></textarea>
+  <textarea id="responseData" cols="50" rows="10" placeholder="waiting response..."></textarea>
+
+  <!-- Chat example -->
+  <hr />
+  <h2>Chat example</h2>
+  <button id="addUser">Add User</button>
+  <button id="refreshLog">Refresh Log</button>
+  <p>
+    <button id="msgBtn">Send Message</button>
+    <input id="messageBox" placeholder="Say some message..." />
+    To
+    <select id="targetChannel">
+      <option value="channel1">channel 1</option>
+      <option value="channel2">channel 2</option>
+      <option value="channel3">channel 3</option>
+      <option value="channel4">channel 4</option>
+      <option value="channel5">channel 5</option>
+      <option value="channel6">channel 6</option>
+    </select>
+    <div id="userList"></div>
+    <div id="logBox"></div>
+  </p>
 </body>
 <script src="/lib/rtc-core.umd.js"></script>
+<script type="module" src="/index.js" defer></script>
+<script type="module" src="/chat.js" defer></script>
 
 </html>
