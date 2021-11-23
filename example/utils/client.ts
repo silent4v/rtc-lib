@@ -2,6 +2,7 @@ import type { WebSocket } from "ws";
 import { createHash } from "crypto";
 import { performance } from "perf_hooks";
 import { channelRef } from "./channel.js";
+import { roomRef } from "./room.js";
 import parse from "fast-json-parse";
 import debug from "debug";
 
@@ -24,6 +25,8 @@ export interface ClientExtension {
   sessionId: string;
   subscribedChannel: Set<string>;
   currentRoom: string;
+  exit: () => void;
+  enter: (roomName: string) => void;
   subscribe: (channelName: string) => void;
   unsubscribe: (channelName: string) => void;
   only: (channelName: string) => void;
@@ -62,7 +65,20 @@ export function clientInit(sock: WebSocket) {
       value: new Set()
     },
     currentRoom: {
-      value: ""
+      value: "$NONE"
+    },
+    exit: {
+      value: () => {
+        roomRef.container.get(self.currentRoom)?.delete(self.sessionId);
+        self.currentRoom = "$NONE";
+        methodDebug("current room: %o", self.currentRoom);
+      }
+    },
+    enter: {
+      value: (roomName: string) => {
+        roomRef.enter(self.sessionId, roomName);
+        methodDebug("current room: %o", self.currentRoom);
+      }
     },
     subscribe: {
       value: (channelName: string) => {

@@ -9,6 +9,8 @@ export interface ServerExtension {
 
 export type Server = WebSocketServer & ServerExtension;
 
+export const userTable = new Map<string, Client>();
+
 export function serverInit(server: WebSocketServer) {
   Object.defineProperties(server, {
     broadcast: {
@@ -18,9 +20,9 @@ export function serverInit(server: WebSocketServer) {
         })
     },
     users: {
-      value: new Map<string, Client>()
+      value: userTable
     }
-  })
+  });
 
   return server as Server;
 }
