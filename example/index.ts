@@ -1,15 +1,19 @@
 import express from "express";
 import { createServer } from "http";
+import { WebSocketServer } from "ws";
 import { performance } from "perf_hooks";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
-import { WebSocketServer } from "ws";
+
 import { regMessengerEvent } from "./routes/messenger/register.js";
-import { clientInit } from "./utils/client.js";
-import { serverInit } from "./utils/server.js";
 import { regRtcEvent } from "./routes/rtc/register.js";
 import { regRoomEvent } from "./routes/room/regester.js";
+import { clientInit } from "./utils/client.js";
+import { serverInit } from "./utils/server.js";
 
+import debug from "debug";
+
+const log = debug("global");
 const PORT = 30000;
 const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
 const publicPath = resolve(DIRNAME, "..", "..", "public");
@@ -17,7 +21,7 @@ const libPath = resolve(DIRNAME, "..");
 /* RESTful Application */
 const httpServer = express();
 
-console.log({DIRNAME, publicPath, libPath});
+console.log({ DIRNAME, publicPath, libPath });
 httpServer
   .use("/", express.static(publicPath))
   .use("/lib", express.static(libPath));
@@ -40,9 +44,10 @@ sockServer.on("connection", rawSock => {
   regRtcEvent(sockServer, client);
   regRoomEvent(sockServer, client);
 
-  client.on("request::ping-pong", ({ $replyToken , ...payload }) => {
+  client.on("request::ping-pong", ({ $replyToken, ...payload }) => {
     /* For testing event, return origin payload */
-    client.sendout($replyToken, payload);
+      log("recv %o", { $replyToken, ...payload });
+      client.sendout($replyToken, payload);
   })
 });
 
