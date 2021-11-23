@@ -7,14 +7,14 @@ const messengerDebug = debug("Messenger");
 
 export function regMessengerEvent(server: Server, client: Client) {
   client.on("request::text::subscribe", ({ channelName, $replyToken }: SubscribeRequest) => {
-    const exists = channelRef.map.get(channelName) !== undefined;
+    const exists = channelRef.container.get(channelName) !== undefined;
     client.subscribe(channelName);
     client.sendout($replyToken, { state: exists ? 1 : 0 });
     messengerDebug("'%s' subscribe '%s'", `${client.sessionId.slice(0,8)}::${client.username}`, channelName);
   });
 
   client.on("request::text::unsubscribe", ({ channelName, $replyToken }: UnsubscribeRequest) => {
-    const exists = channelRef.map.get(channelName) !== undefined;
+    const exists = channelRef.container.get(channelName) !== undefined;
     if (exists) {
       client.unsubscribe(channelName);
     }
@@ -23,7 +23,7 @@ export function regMessengerEvent(server: Server, client: Client) {
   });
 
   client.on("request::text::message", ({ channelName, message, $replyToken }: TalkMessageRequest) => {
-    const clients = channelRef.map.get(channelName);
+    const clients = channelRef.container.get(channelName);
     if(!clients) return client.sendout($replyToken, 0);
     
     const recvTime = Date.now();
