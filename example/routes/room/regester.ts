@@ -1,12 +1,13 @@
 import { Server } from "../../utils/server.js";
 import { Client } from "../../utils/client.js";
 import debug from "debug";
-import { roomRef } from "example/utils/room.js";
+import { roomRef } from "../../utils/room.js";
+import { EnterRequest, ListRequest } from "./room.dto.js";
 
 export function regRoomEvent(server: Server, client: Client) {
   const roomDebug = debug("room");
 
-  client.on("request::room::enter", ({ roomName, $replyToken }) => {
+  client.on("request::room::enter", ({ roomName, $replyToken }: EnterRequest) => {
     roomDebug("request::room::enter , arg: %s", roomName);
     if (client.currentRoom === roomName) {
       client.sendout($replyToken, 0);
@@ -40,10 +41,10 @@ export function regRoomEvent(server: Server, client: Client) {
     });
   });
 
-  client.on("request::room::list", ({ roomName, $replyToken }) => {
+  client.on("request::room::list", ({ roomName, $replyToken }: ListRequest) => {
     roomDebug("request::room::list");
-    roomRef.list(roomName);
-    roomRef
+    const lists = roomRef.list(roomName);
+    client.sendout($replyToken, lists);
   });
 
   /* When client disconnected */
