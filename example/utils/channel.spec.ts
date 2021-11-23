@@ -19,9 +19,9 @@ test("subscribe", () => {
   channel.subscribe("user3", "ch3");
   channel.subscribe("user5", "ch3");
 
-  expect([...channel.map.get("ch1")!.values()]).toStrictEqual(["user1", "user2", "user3", "user4"]);
-  expect([...channel.map.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
-  expect([...channel.map.get("ch3")!.values()]).toStrictEqual(["user1", "user3", "user5"]);
+  expect([...channel.container.get("ch1")!.values()]).toStrictEqual(["user1", "user2", "user3", "user4"]);
+  expect([...channel.container.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
+  expect([...channel.container.get("ch3")!.values()]).toStrictEqual(["user1", "user3", "user5"]);
 });
 
 test("unsubscribe", () => {
@@ -46,9 +46,9 @@ test("unsubscribe", () => {
     .unsubscribe("user5", "ch3")
     .unsubscribe("user6", "ch3")
 
-  expect([...channel.map.get("ch1")!.values()]).toStrictEqual(["user1", "user3", "user4"]);
-  expect([...channel.map.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
-  expect([...channel.map.get("ch3")!.values()]).toStrictEqual(["user1", "user3"]);
+  expect([...channel.container.get("ch1")!.values()]).toStrictEqual(["user1", "user3", "user4"]);
+  expect([...channel.container.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
+  expect([...channel.container.get("ch3")!.values()]).toStrictEqual(["user1", "user3"]);
 });
 
 test("append", () => {
@@ -80,11 +80,11 @@ test("list - mock", () => {
   for (let i = 0; i < 13; ++i) channel.subscribe(randStr(), "ch4");
   for (let i = 0; i < 26; ++i) channel.subscribe(randStr(), "ch5");
 
-  expect(channel.map.get("ch1")?.size).toBe(10);
-  expect(channel.map.get("ch2")?.size).toBe(5);
-  expect(channel.map.get("ch3")?.size).toBe(8);
-  expect(channel.map.get("ch4")?.size).toBe(13);
-  expect(channel.map.get("ch5")?.size).toBe(26);
+  expect(channel.container.get("ch1")?.size).toBe(10);
+  expect(channel.container.get("ch2")?.size).toBe(5);
+  expect(channel.container.get("ch3")?.size).toBe(8);
+  expect(channel.container.get("ch4")?.size).toBe(13);
+  expect(channel.container.get("ch5")?.size).toBe(26);
 });
 
 test("list - real", () => {

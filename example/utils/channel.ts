@@ -1,12 +1,13 @@
-type ChannelState = {
+import { SetManager } from "./set-manager.js";
+
+type ChannelState = { 
   channelName: string,
   clients: string[]
 }
 
-export class Channel {
-  static channel = new Channel;
+export class Channel extends SetManager {
+  static instance = new Channel;
 
-  public map = new Map<string, Set<string>>();
   public subscribe(sid: string, channelName: string) {
     this.update(channelName).get(channelName)!.add(sid);
     return this;
@@ -18,29 +19,17 @@ export class Channel {
     return this;
   }
 
-  public append(channelName: string) {
-    this.update(channelName);
-    return this;
-  }
-
   public list(channelName: string = "$LISTALL"): ChannelState[] {
     if (channelName === "$LISTALL") {
-      return [...this.map.entries()].map(([channelName, clients]) => ({ channelName, clients: [...clients.values()] }));
+      return [...this.container.entries()].map(([channelName, clients]) => ({ channelName, clients: [...clients.values()] }));
     }
 
     return [{
       channelName,
-      clients: [...this.map.get(channelName)?.values() ?? []]
+      clients: [...this.container.get(channelName)?.values() ?? []]
     }];
   }
 
-  public update(channelName: string) {
-    if (!this.map.has(channelName)) {
-      this.map.set(channelName, new Set<string>());
-    }
-
-    return this.map;
-  }
 }
 
-export const channelRef = Channel.channel;
+export const channelRef = Channel.instance;
