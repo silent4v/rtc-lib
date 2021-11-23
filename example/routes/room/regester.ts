@@ -5,7 +5,7 @@ import { roomRef } from "../../utils/room.js";
 import { EnterRequest, ListRequest } from "./room.dto.js";
 
 export function regRoomEvent(server: Server, client: Client) {
-  const roomDebug = debug("room");
+  const roomDebug = debug("Room");
 
   client.on("request::room::enter", ({ roomName, $replyToken }: EnterRequest) => {
     roomDebug("request::room::enter , arg: %s", roomName);

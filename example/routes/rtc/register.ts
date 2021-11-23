@@ -5,7 +5,7 @@ import { CandidateExchangeRequest, SdpForwardRequest, SdpForwardResponse } from 
 import debug from "debug";
 
 export function regRtcEvent(server: Server, client: Client) {
-  const rtcDebug = debug("rtc");
+  const rtcDebug = debug("Rtc");
   const matchTable = new Map<string, string>();
   const waitingTimelimit = 60 * 1000; // 1 minute
 
