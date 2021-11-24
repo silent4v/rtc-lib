@@ -204,11 +204,11 @@ export class Connector {
    * @param {any} payload
    * @param {...any} [flags]
    */
-  public async sendout(eventType: string, payload: any, $replyToken: string = "") {
+  public async sendout(eventType: string, payload: any, _replyToken: string = "") {
     await waiting(this.sockRef);
-    const packetData = stringify({ eventType, payload, $replyToken });
+    const packetData = stringify({ eventType, payload, _replyToken });
     this.sockRef.send(packetData);
-    info("Connector::sendData", { eventType, payload, $replyToken });
+    info("Connector::sendData", { eventType, payload, _replyToken });
   }
 
   /**

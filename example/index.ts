@@ -44,17 +44,17 @@ sockServer.on("connection", rawSock => {
   regRtcEvent(sockServer, client);
   regRoomEvent(sockServer, client);
 
-  client.on("request::register", ({ username }, $replyToken) => {
-    log("recv %o", { $replyToken, username });
+  client.on("request::register", ({ username }, _replyToken) => {
+    log("recv %o", { _replyToken, username });
     client.username = username;
-    client.sendout($replyToken, {
+    client.sendout(_replyToken, {
       sessionId: client.sessionId
     });
   });
 
-  client.on("request::ping-pong", (payload, $replyToken) => {
+  client.on("request::ping-pong", (payload, _replyToken) => {
     /* For testing event, return origin payload */
-    client.sendout($replyToken, payload);
+    client.sendout(_replyToken, payload);
   })
 });
 

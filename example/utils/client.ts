@@ -18,7 +18,7 @@ interface Result<T = any> {
   value: {
     eventType: string;
     payload: T;
-    $replyToken: string
+    _replyToken: string
   }
 }
 
@@ -48,10 +48,10 @@ export function clientInit(sock: WebSocket) {
     const rawData = buf.toString("utf8");
     const result = parse(rawData) as Result;
     if (!result.err) {
-      const { eventType, payload, $replyToken } = result.value;
+      const { eventType, payload, _replyToken } = result.value;
       if (eventType && typeof eventType === "string") {
-        sock.emit(eventType, payload, $replyToken);
-        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true) , $replyToken);
+        sock.emit(eventType, payload, _replyToken);
+        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true) , _replyToken);
       }
     }
   });

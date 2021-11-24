@@ -1,17 +1,17 @@
 export interface SubscribeRequest {
   channelName: string;
-  $replyToken: string;
+  _replyToken: string;
 }
 
 export interface UnsubscribeRequest {
   channelName: string;
-  $replyToken: string;
+  _replyToken: string;
 }
 
 export interface TalkMessageRequest {
   channelName: string;
   message: string;
-  $replyToken: string;
+  _replyToken: string;
 }
 
 export interface SubscribeResponse {

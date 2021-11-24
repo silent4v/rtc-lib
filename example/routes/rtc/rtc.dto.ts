@@ -1,12 +1,12 @@
 export interface SdpForwardRequest {
   sdp: typeof RTCSessionDescription;
   sessionId: string;
-  $replyToken: string;
+  _replyToken: string;
 }
 
 export interface SdpForwardResponse {
   sdp: typeof RTCSessionDescription;
-  $replyToken: string;
+  _replyToken: string;
 }
 
 export interface CandidateExchangeRequest {
