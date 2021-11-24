@@ -5,6 +5,7 @@ import { channelRef } from "./channel.js";
 import { roomRef } from "./room.js";
 import parse from "fast-json-parse";
 import debug from "debug";
+import { inspect } from "util";
 
 const openDebug = debug("Client:open");
 const eventDebug = debug("Client:event");
@@ -50,7 +51,7 @@ export function clientInit(sock: WebSocket) {
       const { eventType, payload, $replyToken } = result.value;
       if (eventType && typeof eventType === "string") {
         sock.emit(eventType, payload, $replyToken);
-        eventDebug(eventType, payload, $replyToken);
+        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true) , $replyToken);
       }
     }
   });

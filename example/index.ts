@@ -13,7 +13,7 @@ import { serverInit } from "./utils/server.js";
 
 import debug from "debug";
 
-const log = debug("global");
+const log = debug("Connection");
 const PORT = 30000;
 const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
 const publicPath = resolve(DIRNAME, "..", "..", "public");
@@ -54,7 +54,6 @@ sockServer.on("connection", rawSock => {
 
   client.on("request::ping-pong", (payload, $replyToken) => {
     /* For testing event, return origin payload */
-    log("recv %o", { $replyToken, payload });
     client.sendout($replyToken, payload);
   })
 });
