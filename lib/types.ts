@@ -17,7 +17,7 @@ export interface OnEventType {
 
   /* Streamings Event */
   on(eventType: "rtc::request", callback: EventCallback<ConnectRequest>): this;
-  on(eventType: "rtc::ice_switch", callback: EventCallback<IceSwitchInfo>): this;
+  on(eventType: "rtc::exchange", callback: EventCallback<IceSwitchInfo>): this;
   on(eventType: "rtc::recvReq", callback: EventCallback<RTCChangeData>): this;
   on(eventType: "rtc::recvRes", callback: EventCallback<RTCChangeData>): this;
   on(eventType: "rtc::disconnected", callback: EventCallback<string>): this;
@@ -36,7 +36,7 @@ export type EventTypes =
   | "text::highPressure"
   | "text::remove"
   | "rtc::request"
-  | "rtc::ice_switch"
+  | "rtc::exchange"
   | "rtc::recvReq"
   | "rtc::recvRes"
   | "rtc::disconnected"
@@ -77,7 +77,11 @@ export type RTCState = {
   muted: boolean;
 };
 
-export type ConnectRequest = { sdp: RTCSessionDescription, sessionId: string };
+export type ConnectRequest = { 
+  sdp: RTCSessionDescription, 
+  sessionId: string,
+  _replyToken?: string,
+};
 
 export type ConnectContext = {
   RTCRef: RTCPeerConnection,

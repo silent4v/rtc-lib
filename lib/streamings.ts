@@ -16,8 +16,9 @@ export class Streamings {
   }
 
   private async recv() {
-    this.signal.on<ConnectRequest>("rtc::request", async (detail, replyToken) => {
-      const { sdp, sessionId } = detail;
+    this.signal.on<ConnectRequest>("rtc::request", async (detail) => {
+      const { sdp, sessionId, _replyToken } = detail;
+      console.log("RECV:detail ", detail);
       if (this.connectGuard_(sessionId)) {
         const RTCRef = this.createPeerConnection(sessionId);
         /* SDP exchange */
@@ -26,11 +27,11 @@ export class Streamings {
         await RTCRef.setLocalDescription(answer);
         info("RTC::RequestFrom", { RTCPeer: RTCRef, sessionId });
         this.signal.dispatch("rtc::recvReq", { RTCPeer: RTCRef, sessionId });
-        this.signal.sendout("rtc::response", { sdp: answer, sessionId }, replyToken);
+        this.signal.sendout("rtc::response", { sdp: answer, sessionId }, _replyToken);
       }
     });
 
-    this.signal.on<IceSwitchInfo>("rtc::ice_switch", async (detail) => {
+    this.signal.on<IceSwitchInfo>("rtc::exchange", async (detail) => {
       const { candidate, sessionId } = detail;
       const connect = this.connections.get(sessionId);
       if (connect) {
@@ -52,6 +53,7 @@ export class Streamings {
     /* wait for response */
     this.signal.once<ConnectRequest>(replyToken, async (detail) => {
       const { sdp } = detail;
+      console.log("RECV RES~");
       await RTCRef.setRemoteDescription(new RTCSessionDescription(sdp));
       info("RTC::ResponseFrom", { RTCPeer: RTCRef, sessionId });
       this.signal.dispatch("rtc::recvRes", { RTCPeer: RTCRef, sessionId });
@@ -125,11 +127,11 @@ export class Streamings {
       info("rtc::candidate", e.candidate);
       if (e && e.candidate) {
         icecandidate.push(e.candidate);
-        this.signal.sendout("rtc::ice_switch", e.candidate, remoteSessionId);
+        this.signal.sendout("rtc::exchange", { candidate: e.candidate, sessionId: remoteSessionId });
       } else if (pc.iceGatheringState === "complete") {
         console.log("Gather success.");
         //icecandidate.forEach(candidate => {
-        //  this.signal.sendout("rtc::ice_switch", candidate, remoteSessionId);
+        //  this.signal.sendout("rtc::exchange", candidate, remoteSessionId);
         //})
       }
     }

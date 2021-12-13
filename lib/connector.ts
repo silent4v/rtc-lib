@@ -1,5 +1,4 @@
-import type { DataTuple } from "./types.js";
-import { delay, randomTag, waiting } from "./utils.js";
+import { delay, waiting } from "./utils.js";
 import { Messenger } from "./messenger.js";
 import { info, failed, success, warning, debug } from "./log.js";
 import { EventScheduler } from "./events.js";
@@ -109,10 +108,9 @@ export class Connector {
       });
 
       try {
-        const { eventType, payload } = parse(data);
-        console.log(eventType, payload);
+        const { eventType, payload, _replyToken = "" } = parse(data);
         if (eventType && typeof eventType === "string") {
-          this.dispatch(eventType, payload);
+          this.dispatch(eventType, payload, _replyToken);
           return;
         }
         failed("Connector::onmessage", "Response format isn't DataTuple.");
