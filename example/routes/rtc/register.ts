@@ -9,7 +9,7 @@ export function regRtcEvent(server: Server, client: Client) {
   const matchTable = new Map<string, string>();
   const waitingTimelimit = 60 * 1000; // 1 minute
 
-  client.on("rtc::request", ({ sdp, sessionId, _replyToken }: SdpForwardRequest) => {
+  client.on("rtc::request", ({ sdp, sessionId }: SdpForwardRequest, _replyToken) => {
     const targetUser = server.users.get(sessionId);
     if (!targetUser || !sessionId) return;
 
@@ -21,7 +21,7 @@ export function regRtcEvent(server: Server, client: Client) {
     }, waitingTimelimit)
   });
 
-  client.on("rtc::response", ({ sdp, _replyToken }: SdpForwardResponse) => {
+  client.on("rtc::response", ({ sdp }: SdpForwardResponse, _replyToken) => {
     const originCallerId = matchTable.get(_replyToken);
     const originCaller = server.users.get(originCallerId ?? "");
     if (!originCaller) return;

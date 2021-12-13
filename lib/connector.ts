@@ -110,6 +110,7 @@ export class Connector {
 
       try {
         const { eventType, payload } = parse(data);
+        console.log(eventType, payload);
         if (eventType && typeof eventType === "string") {
           this.dispatch(eventType, payload);
           return;
@@ -206,9 +207,10 @@ export class Connector {
    */
   public async sendout(eventType: string, payload: any, _replyToken: string = "") {
     await waiting(this.sockRef);
-    const packetData = stringify({ eventType, payload, _replyToken });
+    let vaildPayload = payload ?? "$DEFAULT";
+    const packetData = stringify({ eventType, payload: vaildPayload, _replyToken });
     this.sockRef.send(packetData);
-    info("Connector::sendData", { eventType, payload, _replyToken });
+    info("Connector::sendData", { eventType, payload: vaildPayload, _replyToken });
   }
 
   /**
@@ -246,6 +248,7 @@ export class Connector {
       }, defaultTimeoutMilliSec);
 
       this.once(this.incrSeq_, (data) => {
+        console.log("DONE");
         clearTimeout(timer);
         resolve(data);
         info("Connector::response", {

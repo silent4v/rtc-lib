@@ -20,7 +20,7 @@ export class Channel extends SetManager {
     return this;
   }
 
-  public list(channelName: string = "$LISTALL"): ChannelState[] {
+  public list(channelName: string = "$DEFAULT"): ChannelState[] {
     const basic = super.list(channelName);
     return basic.map(({name, clients}) => ({
       name, 

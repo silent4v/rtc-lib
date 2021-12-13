@@ -7,7 +7,7 @@ import { EnterRequest, ListRequest } from "./room.dto.js";
 export function regRoomEvent(server: Server, client: Client) {
   const roomDebug = debug("Room");
 
-  client.on("request::room::enter", ({ roomName, _replyToken }: EnterRequest) => {
+  client.on("request::room::enter", ({ roomName }: EnterRequest, _replyToken) => {
     roomDebug("request::room::enter , arg: %s", roomName);
     if (client.currentRoom === roomName) {
       client.sendout(_replyToken, 0);
@@ -16,7 +16,7 @@ export function regRoomEvent(server: Server, client: Client) {
     const from = client.currentRoom;
     const to = roomName;
     client.enter(roomName);
-    client.sendout(_replyToken, 1);
+    client.sendout(_replyToken, roomName);
 
     server.broadcast("room::diff", {
       sessionId: client.sessionId,
@@ -26,7 +26,7 @@ export function regRoomEvent(server: Server, client: Client) {
     });
   });
 
-  client.on("request::room::exit", ({ _replyToken }) => {
+  client.on("request::room::exit", (_, _replyToken) => {
     roomDebug("request::room::exit");
     const from = client.currentRoom;
     const to = "$NONE";
@@ -41,7 +41,8 @@ export function regRoomEvent(server: Server, client: Client) {
     });
   });
 
-  client.on("request::room::list", ({ roomName, _replyToken }: ListRequest) => {
+  client.on("request::room::list", ({ roomName }: ListRequest, _replyToken) => {
+    console.log("_replyToken", _replyToken);
     roomDebug("request::room::list");
     const lists = roomRef.list(roomName);
     client.sendout(_replyToken, lists);

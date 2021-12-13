@@ -18,8 +18,8 @@ export class SetManager {
     return this.container;
   }
 
-  public list(name = "$LISTALL"): StateList[] {
-    if (name === "$LISTALL") {
+  public list(name: string): StateList[] {
+    if (name === "$DEFAULT") {
       const pairs = [...this.container.entries()];
       return pairs.map(([name, clients]) => ({ name, clients: [...clients.values()] }));
     }

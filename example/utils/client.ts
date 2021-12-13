@@ -53,6 +53,8 @@ export function clientInit(sock: WebSocket) {
         sock.emit(eventType, payload, _replyToken);
         eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true) , _replyToken);
       }
+    } else {
+      eventDebug("Parse Error.")
     }
   });
 
@@ -81,28 +83,32 @@ export function clientInit(sock: WebSocket) {
       value: () => {
         roomRef.container.get(self.currentRoom)?.delete(self.sessionId);
         self.currentRoom = "$NONE";
-      }
+      },
+      writable: false
     },
     enter: {
       value: (roomName: string) => {
         methodDebug("from %s to %s", self.currentRoom, roomName);
         roomRef.enter(self.sessionId, roomName);
         self.currentRoom = roomName;
-      }
+      },
+      writable: false
     },
     subscribe: {
       value: (channelName: string) => {
         channelRef.subscribe(sessionId, channelName);
         self.subscribedChannel.add(channelName);
         methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
-      }
+      },
+      writable: false
     },
     unsubscribe: {
       value: (channelName: string) => {
         channelRef.unsubscribe(sessionId, channelName);
         self.subscribedChannel.delete(channelName);
         methodDebug("%s current unsubscribe: %o", self.sid, self.subscribedChannel);
-      }
+      },
+      writable: false
     },
     only: {
       value: (channelName: string) => {
@@ -114,13 +120,16 @@ export function clientInit(sock: WebSocket) {
         channelRef.subscribe(sessionId, channelName);
         self.subscribedChannel.add(channelName);
         methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
-      }
+      },
+      writable: false
     },
     sendout: {
       value: <T = any>(eventType: string, payload: T) => {
+        methodDebug("TYPE: %s , DATA = %o", eventType, payload);
         const data = JSON.stringify({ eventType, payload });
         sock.send(data);
-      }
+      },
+      writable: false
     },
   });
   openDebug("sessionId: %s", sessionId);

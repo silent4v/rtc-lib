@@ -19,7 +19,7 @@ export class Room extends SetManager {
     return this;
   }
 
-  public list(channelName: string = "$LISTALL"): RoomState[] {
+  public list(channelName: string): RoomState[] {
     const basic = super.list(channelName);
     return basic.map(({name, clients}) => ({
       name, 
