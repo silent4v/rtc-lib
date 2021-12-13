@@ -234,7 +234,7 @@ export class Connector {
    * }
    *
    */
-  public async request<T = any>(eventType: string, payload: any) {
+  public async request<T = any>(eventType: string, payload?: any) {
     const defaultTimeoutMilliSec = 3000;
     const reqEvent = `request::${eventType}`;
     this.reqIter_.next(`${eventType}`)
