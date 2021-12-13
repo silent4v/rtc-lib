@@ -1,9 +1,4 @@
-export interface EnterRequest {
-  roomName: string;
-  _replyToken: string;
-}
+export type EnterRequest = (roomName: string, _replyToken: string) => void;
 
-export interface ListRequest {
-  roomName: string;
-  _replyToken: string;
-}
+
+export type ListRequest = (roomName: string, _replyToken: string) => void;

@@ -7,7 +7,7 @@ import { EnterRequest, ListRequest } from "./room.dto.js";
 export function regRoomEvent(server: Server, client: Client) {
   const roomDebug = debug("Room");
 
-  client.on("request::room::enter", ({ roomName }: EnterRequest, _replyToken) => {
+  client.on("request::room::enter", (roomName: string, _replyToken: string) => {
     roomDebug("request::room::enter , arg: %s", roomName);
     if (client.currentRoom === roomName) {
       client.sendout(_replyToken, 0);
@@ -41,7 +41,7 @@ export function regRoomEvent(server: Server, client: Client) {
     });
   });
 
-  client.on("request::room::list", ({ roomName }: ListRequest, _replyToken) => {
+  client.on("request::room::list", (roomName: string, _replyToken: string) => {
     console.log("_replyToken", _replyToken);
     roomDebug("request::room::list");
     const lists = roomRef.list(roomName);
