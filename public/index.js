@@ -1,18 +1,21 @@
 import { Connector } from "/lib/lib/index.js";
 window.RTC = null;
-
+window.snapshot = null;
+const userInRoom = document.querySelector("#userInRoom");
 const connectionBtn = document.querySelector("#connectionBtn");
 const readyStateBox = document.querySelector("#readyState");
 const Buttons = document.querySelectorAll("button:not(#connectionBtn)");
+const Inputs = document.querySelectorAll("input, select");
 Buttons.forEach(btn => { btn.disabled = true; });
+Inputs.forEach(input => { input.disabled = true; });
 
 connectionBtn.onclick = async () => {
-  RTC = new Connector("ws://localhost:30000");
+  RTC = new Connector(`ws://${location.host}/websocket/start`);
   // RTC.trace("*");
   readyStateBox.textContent = "Connecting";
   RTC.sockRef.addEventListener("open", () => {
     readyStateBox.textContent = "Connected";
-    Buttons.forEach(btn => { btn.disabled = false; });
+    registerBtn.disabled = false;
   });
 };
 
@@ -21,6 +24,13 @@ const SessionIdBox = document.querySelector("#SessionId");
 registerBtn.onclick = async () => {
   const sessionId = await RTC.register("ExampleUser");
   SessionIdBox.textContent = sessionId;
+  Buttons.forEach(btn => { btn.disabled = false; });
+  Inputs.forEach(input => { input.disabled = false; });
+
+  window.snapshot = await RTC.request("room::list");
+  window.snapshot.sort((a, b) => a.name < b.name ? -1 : 1);
+  userInRoom.textContent = JSON.stringify(window.snapshot, null, 4);
+  RTC.on("room::diff", detechUserChange);
 };
 
 const requestBtn = document.querySelector("#requestBtn");
@@ -72,4 +82,20 @@ function loadTemplate(eventType) {
       }, null, 4);
       break;
   }
+}
+
+function detechUserChange({ from, to, sessionId, username }) {
+  console.log(from, to, sessionId, username);
+  if (from !== "$NONE") {
+    const room = window.snapshot.find(r => r.name === from);
+    const targetIndex = room.clients.indexOf(sessionId);
+    room.clients.splice(targetIndex, 1);
+  }
+
+  if (to !== "$NONE") {
+    const room = window.snapshot.find(r => r.name === to);
+    room.clients.push(sessionId);
+  }
+
+  userInRoom.textContent = JSON.stringify(window.snapshot, null, 4);
 }

@@ -61,12 +61,29 @@
       <option value="channel5">channel 5</option>
       <option value="channel6">channel 6</option>
     </select>
-    <div id="userList"></div>
-    <div id="logBox"></div>
+  <div id="userList"></div>
+  <div id="logBox"></div>
+  </p>
+
+  <!-- Audio example -->
+  <hr />
+  <h2>Audio Chat example</h2>
+  <button id="connectBtn">Connect</button>
+  <p>
+    <div>Enter into</div>
+    <label><input type="radio" name="targetRoom" value="Room1">Room 1</input></label>
+    <label><input type="radio" name="targetRoom" value="Room2">Room 2</input></label>
+    <label><input type="radio" name="targetRoom" value="Room3">Room 3</input></label>
+    <label><input type="radio" name="targetRoom" value="Room4">Room 4</input></label>
+    <label><input type="radio" name="targetRoom" value="Room5">Room 5</input></label>
+    <label><input type="radio" name="targetRoom" value="Room6">Room 6</input></label>
+  <pre id="userInRoom"></pre>
+  <div id="stateLogBox"></div>
   </p>
 </body>
 <script src="/lib/rtc-core.umd.js"></script>
 <script type="module" src="/index.js" defer></script>
 <script type="module" src="/chat.js" defer></script>
+<script type="module" src="/audio.js" defer></script>
 
 </html>
