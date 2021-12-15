@@ -4,11 +4,18 @@ import { ConnectContext, ConnectRequest, IceSwitchInfo, RTCGuard, RTCState } fro
 import { iceConf } from "./config.js";
 import { info } from "./log.js";
 
+enum RetrySTATE {
+  FIRST_CALL,
+  FIRST_RECV,
+  RETRY,
+  WAIT_RETRY
+}
+
 /** @class */
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
+  public allowRetryList = new Map<string, number>();
   public streamEnabled = false;
-  public pending: string[] = [];
   private device_: MediaStream | null = null;
   private connectGuard_: Function = (sessionId) => { console.log(sessionId); return true; };
 
@@ -17,10 +24,21 @@ export class Streamings {
     this.waitingCandidate();
   }
 
+  private checkRetryable(sessionId: string, trigger) {
+    const state = this.allowRetryList.get(sessionId);
+    if (state === undefined) {
+      this.allowRetryList.set(sessionId, trigger === "CALLER" ? RetrySTATE.FIRST_CALL : RetrySTATE.FIRST_RECV);
+    } else if (state === RetrySTATE.WAIT_RETRY) {
+      console.log(`I recv ${sessionId} retry`);
+    } else if (state === RetrySTATE.RETRY) {
+      console.log(`I retry  call back ${sessionId}`);
+    }
+  }
+
   private async recv() {
     this.signal.on<ConnectRequest>("rtc::request", async ({ sdp, sessionId, _replyToken }) => {
       if (!this.connectGuard_(sessionId)) return;
-
+      this.checkRetryable(sessionId, "RECEIVER");
       const RTCRef = this.createPeerConnection(sessionId);
       /* SDP exchange */
       await RTCRef.setRemoteDescription(new RTCSessionDescription(sdp));
@@ -31,7 +49,6 @@ export class Streamings {
       info("RTC::RequestFrom", { RTCPeer: RTCRef, sessionId });
       this.signal.dispatch("rtc::recvReq", { RTCPeer: RTCRef, sessionId });
       this.signal.sendout("rtc::response", { sdp: answer, sessionId }, _replyToken);
-
     });
   }
 
@@ -48,11 +65,9 @@ export class Streamings {
   /**
    * @param  {string} sessionId
    */
-  public async call(sessionId: string, retry = true) {
-    if (retry) {
-      this.pending.push(sessionId);
-    }
+  public async call(sessionId: string) {
     const replyToken = randomTag();
+    this.checkRetryable(sessionId, "CALLER");
     const RTCRef = this.createPeerConnection(sessionId);
     const offer = await RTCRef.createOffer({
       offerToReceiveAudio: true,
@@ -119,16 +134,28 @@ export class Streamings {
     /* when connection close, remove it from connections */
     pc.onconnectionstatechange = () => {
       info("rtc::connection", `State: ${pc.connectionState}`);
-      const closeStates = ["disconnected", "closed"];
-      if (closeStates.some(state => pc.connectionState === state)) {
-        this.connections.delete(remoteSessionId);
-        this.signal.dispatch("rtc::disconnected", remoteSessionId);
-      } else if (pc.connectionState === "connected") {
-        this.signal.dispatch("rtc::connected", remoteSessionId);
-        const idx = this.pending.indexOf(remoteSessionId);
-        this.pending.splice(idx, 1);
-      } else if (pc.connectionState === "failed") {
-        console.log("FAILED");
+      switch (pc.connectionState) {
+        case "closed":
+        case "disconnected":
+          this.connections.delete(remoteSessionId);
+          this.signal.dispatch("rtc::disconnected", remoteSessionId);
+          this.allowRetryList.delete(remoteSessionId);
+          break;
+        case "connected":
+          this.signal.dispatch("rtc::connected", remoteSessionId);
+          this.allowRetryList.delete(remoteSessionId);
+          break;
+        case "failed":
+          const state = this.allowRetryList.get(remoteSessionId);
+          console.log("Failed", state);
+          if (state && state === RetrySTATE.FIRST_CALL) {
+            this.allowRetryList.set(remoteSessionId, RetrySTATE.WAIT_RETRY);
+          } else if (state && state === RetrySTATE.FIRST_RECV) {
+            this.allowRetryList.set(remoteSessionId, RetrySTATE.RETRY);
+            this.call(remoteSessionId);
+          } else /* RETRY || WAIT_RETRY */ {
+            this.allowRetryList.delete(remoteSessionId);
+          }
       }
     }
 
