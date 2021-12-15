@@ -246,7 +246,6 @@ export class Connector {
       }, defaultTimeoutMilliSec);
 
       this.once(this.incrSeq_, (data) => {
-        console.log("DONE");
         clearTimeout(timer);
         resolve(data);
         info("Connector::response", {
