@@ -13,26 +13,29 @@ export class Streamings {
 
   constructor(public signal: Connector) {
     this.recv();
+    this.waitingCandidate();
   }
 
   private async recv() {
-    this.signal.on<ConnectRequest>("rtc::request", async (detail) => {
-      const { sdp, sessionId, _replyToken } = detail;
-      console.log("RECV:detail ", detail);
-      if (this.connectGuard_(sessionId)) {
-        const RTCRef = this.createPeerConnection(sessionId);
-        /* SDP exchange */
-        await RTCRef.setRemoteDescription(new RTCSessionDescription(sdp));
-        const answer = await RTCRef.createAnswer();
-        await RTCRef.setLocalDescription(answer);
-        info("RTC::RequestFrom", { RTCPeer: RTCRef, sessionId });
-        this.signal.dispatch("rtc::recvReq", { RTCPeer: RTCRef, sessionId });
-        this.signal.sendout("rtc::response", { sdp: answer, sessionId }, _replyToken);
-      }
-    });
+    this.signal.on<ConnectRequest>("rtc::request", async ({ sdp, sessionId, _replyToken }) => {
+      if (!this.connectGuard_(sessionId)) return;
 
-    this.signal.on<IceSwitchInfo>("rtc::exchange", async (detail) => {
-      const { candidate, sessionId } = detail;
+      const RTCRef = this.createPeerConnection(sessionId);
+      /* SDP exchange */
+      await RTCRef.setRemoteDescription(new RTCSessionDescription(sdp));
+      const answer = await RTCRef.createAnswer();
+      await RTCRef.setLocalDescription(answer);
+
+      /* Response */
+      info("RTC::RequestFrom", { RTCPeer: RTCRef, sessionId });
+      this.signal.dispatch("rtc::recvReq", { RTCPeer: RTCRef, sessionId });
+      this.signal.sendout("rtc::response", { sdp: answer, sessionId }, _replyToken);
+
+    });
+  }
+
+  private async waitingCandidate() {
+    this.signal.on<IceSwitchInfo>("rtc::exchange", async ({ candidate, sessionId }) => {
       const connect = this.connections.get(sessionId);
       if (connect) {
         info("RTC::IceSwitchInfo", { candidate, source: sessionId });
@@ -47,13 +50,14 @@ export class Streamings {
   public async call(sessionId: string) {
     const replyToken = randomTag();
     const RTCRef = this.createPeerConnection(sessionId);
-    const offer = await RTCRef.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+    const offer = await RTCRef.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    });
     await RTCRef.setLocalDescription(offer);
 
     /* wait for response */
-    this.signal.once<ConnectRequest>(replyToken, async (detail) => {
-      const { sdp } = detail;
-      console.log("RECV RES~");
+    this.signal.once<ConnectRequest>(replyToken, async ({ sdp }) => {
       await RTCRef.setRemoteDescription(new RTCSessionDescription(sdp));
       info("RTC::ResponseFrom", { RTCPeer: RTCRef, sessionId });
       this.signal.dispatch("rtc::recvRes", { RTCPeer: RTCRef, sessionId });
@@ -87,8 +91,9 @@ export class Streamings {
     const icecandidate: RTCIceCandidate[] = [];
     const channel = pc.createDataChannel(this.signal.username ?? "@anonymous");
     const audio = new Audio;
-    audio.autoplay = true;
     const media = new MediaStream;
+
+    /* detect device is turned on */
     if (this.device_ !== null) {
       this.device_.getTracks().forEach(track => pc.addTrack(track));
     }
@@ -96,22 +101,20 @@ export class Streamings {
     /* when receive media stream */
     pc.ontrack = e => {
       const user = this.connections.get(remoteSessionId);
-      if (user) {
-        const [stream] = e.streams;
-        user.media = stream;
-        //const audioTrack = stream.getAudioTracks();
-        //const audioStream = new MediaStream;
-        //audioTrack.forEach(track => );
-        //audioStream.addTrack(e.track)
-        const media = new MediaStream;
-        media.addTrack(e.track);
-        user.audio.srcObject = media;
-        user.audio.play();
-      }
+      if (!user) return;
+      
+      const media = new MediaStream;
+      media.addTrack(e.track);
+      user.media = e.streams[0];
+      user.audio = audio;
+      user.audio.autoplay = true;
+      user.audio.srcObject = media;
+      user.audio.play();
     }
 
     /* when connection close, remove it from connections */
     pc.onconnectionstatechange = () => {
+      
       info("rtc::connection", `State: ${pc.connectionState}`);
       const closeStates = ["disconnected", "failed", "closed"];
       if (closeStates.some(state => pc.connectionState === state)) {
@@ -127,12 +130,11 @@ export class Streamings {
       info("rtc::candidate", e.candidate);
       if (e && e.candidate) {
         icecandidate.push(e.candidate);
-        this.signal.sendout("rtc::exchange", { candidate: e.candidate, sessionId: remoteSessionId });
       } else if (pc.iceGatheringState === "complete") {
         console.log("Gather success.");
-        //icecandidate.forEach(candidate => {
-        //  this.signal.sendout("rtc::exchange", candidate, remoteSessionId);
-        //})
+        icecandidate.forEach(candidate => {
+          this.signal.sendout("rtc::exchange", {candidate, sessionId: remoteSessionId});
+        })
       }
     }
 
@@ -143,7 +145,13 @@ export class Streamings {
       recvChannel.onmessage = ({ data }) => this.signal.dispatch("rtc::message", { remoteSessionId, username: recvChannel.label, data });
     }
 
-    this.connections.set(remoteSessionId, { RTCRef: pc, sessionId: remoteSessionId, media, audio, channel });
+    this.connections.set(remoteSessionId, {
+      RTCRef: pc,
+      sessionId: remoteSessionId,
+      media,
+      audio,
+      channel
+    });
     return pc;
   }
 

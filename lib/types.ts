@@ -91,8 +91,15 @@ export type ConnectContext = {
   channel: RTCDataChannel
 };
 
-export type IceSwitchInfo = { candidate: RTCIceCandidateInit, sessionId: string };
+export type IceSwitchInfo = { 
+  candidate: RTCIceCandidateInit;
+  sessionId: string;
+};
 
-export type ChannelMessage = { remoteSessionId: string, username: string, data: string }
+export type ChannelMessage = { 
+  remoteSessionId: string; 
+  username: string;
+  data: string;
+}
 
 export {};
