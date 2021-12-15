@@ -87,7 +87,7 @@ export class Streamings {
    * @param  {string} remoteSessionId
    */
   private createPeerConnection(remoteSessionId: string) {
-    const pc = new RTCPeerConnection();
+    const pc = new RTCPeerConnection(iceConf);
     const icecandidate: RTCIceCandidate[] = [];
     const channel = pc.createDataChannel(this.signal.username ?? "@anonymous");
     const audio = new Audio;
