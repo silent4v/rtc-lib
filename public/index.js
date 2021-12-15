@@ -30,6 +30,18 @@ registerBtn.onclick = async () => {
   Inputs.forEach(input => { input.disabled = false; });
 
   window.snapshot = await RTC.request("room::list");
+  
+  /* Build Default List */
+  for (let i = 1; i <= 6; ++i) {
+    const roomName = `Room${i}`;
+    if (!window.snapshot.find(r => r.name === roomName)) {
+      window.snapshot.push({
+        name: roomName,
+        clients: [],
+        type: "$room"
+      });
+    }
+  }
   window.snapshot.sort((a, b) => a.name < b.name ? -1 : 1);
   userInRoom.textContent = JSON.stringify(window.snapshot, null, 4);
   RTC.on("room::diff", detechUserChange);
