@@ -14,10 +14,11 @@ export const userTable = new Map<string, Client>();
 export function serverInit(server: WebSocketServer) {
   Object.defineProperties(server, {
     broadcast: {
-      value: (eventType: string, payload: any) =>
+      value: (eventType: string, payload: any) => {
         server.clients.forEach(sock => {
-          sock.emit(stringify({ eventType, payload }));
+          sock.send(stringify({ eventType, payload }));
         })
+      }
     },
     users: {
       value: userTable

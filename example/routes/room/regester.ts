@@ -50,6 +50,7 @@ export function regRoomEvent(server: Server, client: Client) {
 
   /* When client disconnected */
   client.on("close", () => {
+    client.exit();
     server.broadcast("room::diff", {
       sessionId: client.sessionId,
       username: client.username,
