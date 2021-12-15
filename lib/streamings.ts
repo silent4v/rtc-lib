@@ -8,6 +8,7 @@ import { info } from "./log.js";
 export class Streamings {
   public connections = new Map<string, ConnectContext>();
   public streamEnabled = false;
+  public pending: string[] = [];
   private device_: MediaStream | null = null;
   private connectGuard_: Function = (sessionId) => { console.log(sessionId); return true; };
 
@@ -47,7 +48,10 @@ export class Streamings {
   /**
    * @param  {string} sessionId
    */
-  public async call(sessionId: string) {
+  public async call(sessionId: string, retry = true) {
+    if (retry) {
+      this.pending.push(sessionId);
+    }
     const replyToken = randomTag();
     const RTCRef = this.createPeerConnection(sessionId);
     const offer = await RTCRef.createOffer({
@@ -102,7 +106,7 @@ export class Streamings {
     pc.ontrack = e => {
       const user = this.connections.get(remoteSessionId);
       if (!user) return;
-      
+
       const media = new MediaStream;
       media.addTrack(e.track);
       user.media = e.streams[0];
@@ -114,14 +118,17 @@ export class Streamings {
 
     /* when connection close, remove it from connections */
     pc.onconnectionstatechange = () => {
-      
       info("rtc::connection", `State: ${pc.connectionState}`);
-      const closeStates = ["disconnected", "failed", "closed"];
+      const closeStates = ["disconnected", "closed"];
       if (closeStates.some(state => pc.connectionState === state)) {
         this.connections.delete(remoteSessionId);
         this.signal.dispatch("rtc::disconnected", remoteSessionId);
       } else if (pc.connectionState === "connected") {
         this.signal.dispatch("rtc::connected", remoteSessionId);
+        const idx = this.pending.indexOf(remoteSessionId);
+        this.pending.splice(idx, 1);
+      } else if (pc.connectionState === "failed") {
+        console.log("FAILED");
       }
     }
 
@@ -130,11 +137,10 @@ export class Streamings {
       info("rtc::candidate", e.candidate);
       if (e && e.candidate) {
         icecandidate.push(e.candidate);
+        const { candidate } = e;
+        this.signal.sendout("rtc::exchange", { candidate, sessionId: remoteSessionId });
       } else if (pc.iceGatheringState === "complete") {
         console.log("Gather success.");
-        icecandidate.forEach(candidate => {
-          this.signal.sendout("rtc::exchange", {candidate, sessionId: remoteSessionId});
-        })
       }
     }
 
@@ -177,8 +183,6 @@ export class Streamings {
   /**
    * @argument  {string} sessionId
    * @arg  {boolean} mute
-   * 
-
    */
   public setRemoteMuted(sessionId: string, mute: boolean) {
     const user = this.connections.get(sessionId);
