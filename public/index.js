@@ -10,7 +10,9 @@ Buttons.forEach(btn => { btn.disabled = true; });
 Inputs.forEach(input => { input.disabled = true; });
 
 connectionBtn.onclick = async () => {
-  RTC = new Connector(`ws://${location.host}/websocket/start`);
+  const protocol = location.protocol.includes("https") ? "wss" : "ws";
+  const host = location.host;
+  RTC = new Connector(`${protocol}://${host}/websocket/start`);
   // RTC.trace("*");
   readyStateBox.textContent = "Connecting";
   RTC.sockRef.addEventListener("open", () => {
