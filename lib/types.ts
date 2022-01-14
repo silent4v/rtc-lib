@@ -47,9 +47,9 @@ export type EventTypes =
 
 /* Text chat */
 export type Message = {
-  roomId: string;
+  channelName: string;
   message: string;
-  who: string;
+  from: string;
   at: number;
 };
 

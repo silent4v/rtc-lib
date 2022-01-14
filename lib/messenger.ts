@@ -13,8 +13,8 @@ export class Messenger {
 
   constructor(public signal: Connector) {
     this.signal.on<Message>("text::message", (data) => {
-      const { roomId, message, who, at } = data;
-      this.signal.dispatch(`notify::${roomId}`, { message, who, at });
+      const { channelName, message, from, at } = data;
+      this.signal.dispatch(`notify::${channelName}`, { message, from, at });
       this.inbox.push(data);
       if (this.inbox.length === this.highPressure_) {
         this.signal.dispatch("text::highPressure", this.inbox.length);
