@@ -15,7 +15,7 @@ import { clientInit } from "./utils/client.js";
 import { serverInit } from "./utils/server.js";
 
 import debug from "debug";
-import { VerifyRouter } from "./routes/api/verify.js";
+import { authTable, VerifyRouter } from "./routes/api/verify.js";
 
 const log = debug("Connection");
 const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
@@ -69,9 +69,14 @@ sockServer.on("connection", rawSock => {
 /* Raw Http server */
 createServer(httpServer)
   .on("upgrade", (request, socket, head) => {
-    sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
-      sockServer.emit("connection", ws, request);
-    });
+    const authHeader = request.headers["authorization"] ?? "";
+    if (authTable.has(authHeader)) {
+      sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
+        sockServer.emit("connection", ws, request);
+      })
+    } else {
+      socket.destroy();
+    }
   })
   .listen(
     process.env.PORT,

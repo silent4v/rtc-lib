@@ -4,7 +4,7 @@ import { AuthMiddleware } from "../pipe/Auth.js";
 
 export const VerifyRouter = Router();
 
-const authTable = new Set<string>();
+export const authTable = new Set<string>();
 VerifyRouter.use(AuthMiddleware);
 
 VerifyRouter.get("/", (req, res) => {
