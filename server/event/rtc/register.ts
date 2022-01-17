@@ -1,8 +1,7 @@
+import debug from "debug";
 import type { Client } from "../../utils/client.js";
 import type { Server } from "../../utils/server.js";
-
-import { CandidateExchangeRequest, SdpForwardRequest, SdpForwardResponse } from "./rtc.dto.js";
-import debug from "debug";
+import type { CandidateExchangeRequest, SdpForwardRequest, SdpForwardResponse } from "./rtc.dto";
 
 const matchTable = new Map<string, string>();
 export function regRtcEvent(server: Server, client: Client) {

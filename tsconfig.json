@@ -46,6 +46,6 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": ["./lib/**/*", "./example/**/*"],
+  "include": ["./lib/**/*", "server/**/*"],
   "exclude": ["./release/**/*", "**/*.spec.ts"]
 }

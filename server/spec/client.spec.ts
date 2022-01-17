@@ -1,8 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { channelRef } from "./channel.js";
-import { Client, clientInit } from "./client.js";
-import { roomRef } from "./room.js";
-import { Server, serverInit } from "./server.js";
+import { channelRef } from "../utils/channel.js";
+import { Client, clientInit } from "../utils/client.js";
+import { roomRef } from "../utils/room.js";
+import { Server, serverInit } from "../utils/server.js";
 
 let server!: Server;
 let client!: Client;

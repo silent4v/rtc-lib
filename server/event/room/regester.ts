@@ -1,8 +1,8 @@
+import debug from "debug";
 import { Server } from "../../utils/server.js";
 import { Client } from "../../utils/client.js";
-import debug from "debug";
 import { roomRef } from "../../utils/room.js";
-import { EnterRequest, ListRequest } from "./room.dto.js";
+import type { EnterRequest, ListRequest } from "./room.dto";
 
 export function regRoomEvent(server: Server, client: Client) {
   const roomDebug = debug("Room");

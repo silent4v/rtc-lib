@@ -1,4 +1,4 @@
-import { Channel } from "./channel";
+import { Channel } from "../utils/channel";
 
 test("subscribe", () => {
   const channel = new Channel;
