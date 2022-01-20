@@ -17,7 +17,7 @@ refreshLog.onclick = () => {
 addUser.onclick = async () => {
   usersCount++;
   const username = `USER_${usersCount.toString().padStart(3, 0)}`;
-  const client = new RTCCore.Connector("ws://localhost:30000");
+  const client = new RTCCore.Connector(window.location.href.replace(/^http/, "ws"));
   const sid = await client.register(username);
 
   const userCard = document.createElement("div");
