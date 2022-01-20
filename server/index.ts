@@ -1,24 +1,7 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
 import { createServer } from "http";
-import "./config/index.js";
 import { sockServer } from "./event/websocket.js";
 import { verifySockConnect } from "./controllers/verify.controller.js";
-import {
-  staticFileRouter,
-  verifyRouter
-} from "./routes/index.js";
-
-/* RESTful Application */
-export const app = express()
-  .use(cors())
-  .use(helmet())
-  .use(express.json());
-
-app.set("authorTable", new Set<string>());
-app.use(staticFileRouter);
-app.use("/api/v1", verifyRouter);
+import { app } from "./app";
 
 /* Raw Http server */
 createServer(app)

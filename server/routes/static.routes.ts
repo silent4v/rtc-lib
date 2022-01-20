@@ -4,9 +4,8 @@ import { fileURLToPath } from "url";
 import { healthChecker } from "../controllers/static.controller.js";
 
 export const staticFileRouter = Router();
-const DIRNAME = resolve(fileURLToPath(import.meta.url), "..");
-const publicPath = resolve(DIRNAME, "..", "..", "..", "public");
-const libraryPath = resolve(DIRNAME, "..", "..");
+const publicPath = resolve(__dirname, "..", "..", "..", "public");
+const libraryPath = resolve(__dirname, "..", "..");
 
 staticFileRouter.use("/", express.static(publicPath));
 staticFileRouter.use("/lib", express.static(libraryPath));

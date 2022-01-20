@@ -1,7 +1,7 @@
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 export default {
-  preset: 'ts-jest',
   verbose: true,
+  preset: 'ts-jest',
   testEnvironment: 'node',
   testRegex: ".*\\.(test|spec)\\.tsx?$",
   extensionsToTreatAsEsm: ['.ts'],
