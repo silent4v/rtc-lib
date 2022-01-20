@@ -1,6 +1,5 @@
 import { app } from "../app";
 import request from "supertest";
-import { createServer, Server } from "http";
 
 describe("verify route, if user data is object", () => {
   let response;
@@ -71,7 +70,7 @@ describe("verify route, if user data is empty", () => {
   it("POST /api/v1/access/:token", async () => {
     const verifyReq = await request(app).post(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
-    expect(verifyReq.body.data).toStrictEqual("");
+    expect(verifyReq.body.data).toStrictEqual({});
   });
 });
 

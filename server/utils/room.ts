@@ -1,5 +1,5 @@
-import { SetManager } from "./set-manager.js";
-import { userTable } from "./server.js";
+import { SetManager } from "./set-manager";
+import { userTable } from "./server";
 
 type RoomState = { 
   name: string,
@@ -9,6 +9,23 @@ type RoomState = {
 
 export class Room extends SetManager {
   static instance = new Room;
+  public tokenMatchTable = new Map<string, string>();
+
+  public setExpireToken(token: string, room: string, expireTime = 600) {
+    this.tokenMatchTable.set(token, room);
+    setTimeout(() => {
+      this.tokenMatchTable.delete(token);
+    }, expireTime * 1000);
+  }
+
+  public useToken(token) {
+    if(this.tokenMatchTable.has(token)) {
+      const room = this.tokenMatchTable.get(token);
+      this.tokenMatchTable.delete(token);
+      return room as string;
+    }
+    return null;
+  }
 
   public enter(sid: string, roomName: string) {
     const user = userTable.get(sid);

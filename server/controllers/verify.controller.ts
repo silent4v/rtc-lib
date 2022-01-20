@@ -1,21 +1,23 @@
 import crypto from "crypto";
 import type { RequestHandler } from "express";
-const { parse } = JSON;
+import { roomRef } from "../utils/room";
 
 export const issueAccessToken: RequestHandler = (req, res) => {
   const room = req.query?.room;
-  const data = req.query?.data ?? "";
-  const authTable = req.app.get("authorTable") as Map<string, any>;
+  const data = req.query?.data ?? {};
+  const authTable = req.app.get("authTable") as Map<string, any>;
   const token = crypto.randomBytes(16).toString("hex");
-  authTable.set(token, isJsonString(data) ? parse(data) : (data ?? ""));
+  authTable.set(token, isJsonString(data));
   if( !room ) {
     res.status(400).json({ message: "invaild room" })
   }
+
+  roomRef.setExpireToken(token, room as string);
   res.status(200).json({ token });
 }
 
 export const verifyAccessToken: RequestHandler = (req, res) => {
-  const authTable = req.app.get("authorTable") as Map<string, any>;
+  const authTable = req.app.get("authTable") as Map<string, any>;
   const token = req.params.token;
 
   if (authTable.has(token)) {
@@ -28,8 +30,8 @@ export const verifyAccessToken: RequestHandler = (req, res) => {
 function isJsonString(str): str is string {
   try {
     const json = JSON.parse(str);
-    return (typeof json === 'object');
+    return json;
   } catch (e) {
-    return false;
+    return str;
   }
 }

@@ -33,6 +33,7 @@ export interface ClientExtension {
   subscribe: (channelName: string) => void;
   unsubscribe: (channelName: string) => void;
   only: (channelName: string) => void;
+  useToken: (token: string) => string | null;
   sendout: <T = any>(eventType: string, payload: T) => void;
 }
 
@@ -51,7 +52,7 @@ export function clientInit(sock: WebSocket) {
       const { eventType, payload, _replyToken } = result.value;
       if (eventType && typeof eventType === "string") {
         sock.emit(eventType, payload, _replyToken);
-        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true) , _replyToken);
+        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true), _replyToken);
       }
     } else {
       eventDebug("Parse Error.")
@@ -122,6 +123,16 @@ export function clientInit(sock: WebSocket) {
         methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
       },
       writable: false
+    },
+    useToken: {
+      value: (token: string) => {
+        const room = roomRef.useToken(token);
+        if (room) {
+          self.only(room);
+          self.enter(room);
+        }
+        return room;
+      }
     },
     sendout: {
       value: <T = any>(eventType: string, payload: T) => {

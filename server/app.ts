@@ -7,14 +7,12 @@ import {
   verifyRouter
 } from "./routes";
 
-export const authTable = new Map<string, any>();
-
 /* RESTful Application */
 export const app = express()
   .use(cors())
   .use(helmet())
   .use(express.json());
 
-app.set("authorTable", authTable);
+app.set("authTable", new Map<string, any>());
 app.use(staticFileRouter);
 app.use("/api/v1", verifyRouter);

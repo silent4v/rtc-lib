@@ -30,11 +30,12 @@ export class SetManager {
     }];
   }
 
+  /* if set is empty, remove set from HashTable */
   public refresh() {
     const keys = [...this.container.keys()];
-    keys.forEach(k => {
-      if (this.container.get(k)!.size <= 0)
-        this.container.delete(k);
+    keys.forEach(key => {
+      if (this.container.get(key)!.size <= 0)
+        this.container.delete(key);
     });
   }
 }
