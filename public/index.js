@@ -1,4 +1,4 @@
-import { Connector } from "/lib/lib/index.js";
+const { Connector } = RTCCore;
 window.RTC = null;
 window.snapshot = null;
 const userInRoom = document.querySelector("#userInRoom");
