@@ -2,8 +2,6 @@
   "name": "rtc-lib",
   "version": "1.0.0",
   "description": "software develop kit for real-time interactive",
-  "module": "es2020",
-  "type": "module",
   "main": "release/lib/index.js",
   "author": "YanHau <yhchen.space@gmail.com>",
   "license": "MIT",
@@ -12,10 +10,10 @@
     "tsc-watch": "tsc -p ./tsconfig.json -w",
     "rollup": "rollup -c rollup.config.js",
     "build": "run-s tsc-build rollup",
-    "serve": "cross-env DEBUG=Route* node release/server",
+    "serve": "cross-env DEBUG=* node release/server",
     "docs:build": "npx jsdoc -c jsdoc.json",
     "docs": "npm-run-all build:tsc docs:build",
-    "test": "jest --detectOpenHandles"
+    "test": "jest"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.1",

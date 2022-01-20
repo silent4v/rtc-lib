@@ -1,7 +1,6 @@
 import express, { Router } from "express";
 import { resolve } from "path";
-import { fileURLToPath } from "url";
-import { healthChecker } from "../controllers/static.controller.js";
+import { healthChecker } from "../controllers/static.controller";
 
 export const staticFileRouter = Router();
 const publicPath = resolve(__dirname, "..", "..", "..", "public");

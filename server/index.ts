@@ -1,7 +1,7 @@
 import { createServer } from "http";
+import type { Duplex } from "stream";
 import { sockServer } from "./event/websocket.js";
-import { verifySockConnect } from "./controllers/verify.controller.js";
-import { app } from "./app";
+import { app } from "./app.js";
 
 /* Raw Http server */
 createServer(app)
@@ -18,3 +18,13 @@ createServer(app)
     () => console.log(`HTTP Server run at http://localhost:${process.env.PORT}`)
   );
 
+function verifySockConnect(req: any, socket: Duplex) {
+  const authTable = app.get("authTable");
+  const authHeader = req.headers["authorization"] ?? "";
+  if (authTable.has(authHeader) || process.env.NODE_ENV?.includes("dev")) {
+    return true;
+  } else {
+    socket.destroy();
+    return false;
+  }
+}
