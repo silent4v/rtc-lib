@@ -1,5 +1,5 @@
 import { SetManager } from "./set-manager";
-import { userTable } from "./server";
+import { Server } from "./server";
 
 type RoomState = { 
   name: string,
@@ -28,7 +28,7 @@ export class Room extends SetManager {
   }
 
   public enter(sid: string, roomName: string) {
-    const user = userTable.get(sid);
+    const user = Server.users_.get(sid);
     if (user) {
       user.exit();
       this.update(roomName).get(roomName)!.add(sid);

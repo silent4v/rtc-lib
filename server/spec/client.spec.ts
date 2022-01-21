@@ -1,46 +1,23 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { channelRef } from "../utils/channel.js";
-import { Client, clientInit } from "../utils/client.js";
-import { roomRef } from "../utils/room.js";
-import { Server, serverInit } from "../utils/server.js";
+import { Server, Client, roomRef, channelRef } from "../utils";
 
 let server!: Server;
 let client!: Client;
 
 beforeAll(() => {
-  server = serverInit(new WebSocketServer({ port: 30000 }));
+  const s = new WebSocketServer({ port: 30000 });
+  server = new Server(s);
+  client = new Client(new WebSocket("ws://localhost:30000"));
+  server.users.set(client.sessionId, client);
 });
 
 afterAll(() => {
-  client.close();
-  server.close();
+  // client.sock.close();
+  server.sock.close();
 });
 
 describe("Client Init", () => {
 
-  test("initial success", done => {
-    client = clientInit(new WebSocket("ws://localhost:30000"));
-    const desc = Object.getOwnPropertyDescriptors(client);
-    const fields = Object.keys(desc);
-    expect(fields).toEqual(expect.arrayContaining([
-      "username",
-      "sessionId",
-      "sid",
-      "subscribedChannel",
-      "currentRoom",
-      "exit",
-      "enter",
-      "subscribe",
-      "unsubscribe",
-      "only",
-      "sendout"
-    ]));
-
-    client.on("open", () => {
-      server.users.set(client.sessionId, client);
-      done();
-    })
-  });
 
   test("default value", () => {
     expect(client.username).toBe("$NONE");
@@ -51,6 +28,7 @@ describe("Client Init", () => {
   });
 
   test("behavior: exit/enter room", () => {
+
     client.enter("testing-room");
     expect(client.currentRoom).toBe("testing-room");
     expect(roomRef.container.get("testing-room")).toBeTruthy();

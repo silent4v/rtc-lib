@@ -10,7 +10,7 @@
     "tsc-watch": "tsc -p ./tsconfig.json -w",
     "rollup": "rollup -c rollup.config.js",
     "build": "run-s tsc-build rollup",
-    "serve": "cross-env DEBUG=* node release/server",
+    "serve": "cross-env DEBUG=rtc* node release/server",
     "docs:build": "npx jsdoc -c jsdoc.json",
     "docs": "npm-run-all build:tsc docs:build",
     "test": "jest"

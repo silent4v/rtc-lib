@@ -1,148 +1,147 @@
-import type { WebSocket } from "ws";
+import { WebSocket } from "ws";
 import { createHash } from "crypto";
 import { performance } from "perf_hooks";
-import { channelRef } from "./channel.js";
-import { roomRef } from "./room.js";
 import parse from "fast-json-parse";
-import debug from "debug";
-import { inspect } from "util";
+import { roomRef, channelRef } from "./index";
+const dd = require("debug")("client");
 
-const openDebug = debug("Client:open");
-const eventDebug = debug("Client:event");
-const methodDebug = debug("Client:invoke");
-
-let appCount = 0;
-
-interface Result<T = any> {
+export type Result = {
   err: any;
   value: {
     eventType: string;
-    payload: T;
-    _replyToken: string
+    payload: any;
+    _replyToken: string;
   }
 }
 
-export interface ClientExtension {
-  username: string;
-  sessionId: string;
-  sid: string;
-  subscribedChannel: Set<string>;
-  currentRoom: string;
-  exit: () => void;
-  enter: (roomName: string) => void;
-  subscribe: (channelName: string) => void;
-  unsubscribe: (channelName: string) => void;
-  only: (channelName: string) => void;
-  useToken: (token: string) => string | null;
-  sendout: <T = any>(eventType: string, payload: T) => void;
-}
+export class Client {
+  static appCount = 0;
+  public username: string;
+  public currentRoom: string;
+  public sessionId: string;
+  public sid: string;
+  public subscribedChannel: Set<string>;
 
-export type Client = WebSocket & ClientExtension;
+  /* function delegate to rawSock */
+  public on = this.sock.on.bind(this.sock);
+  public off = this.sock.off.bind(this.sock);
+  public once = this.sock.once.bind(this.sock);
+  public emit = this.sock.once.bind(this.sock);
 
-export function clientInit(sock: WebSocket) {
-  appCount = (appCount + 1) % 0xfffff;
-  const timestamp = Date.now();
-  const chunk = `${timestamp}${performance.now()}${appCount}`;
-  const sessionId = createHash("sha224").update(chunk).digest("hex");
+  constructor(public sock: WebSocket) {
+    Client.appCount = (Client.appCount + 1) % 0xfffff;
+    const timestamp = Date.now();
+    const chunk = `${timestamp}${performance.now()}${Client.appCount}`;
+    const sessionId = createHash("sha224").update(chunk).digest("hex");
 
-  sock.on("message", function proxyEvent(buf) {
-    const rawData = buf.toString("utf8");
-    const result = parse(rawData) as Result;
-    if (!result.err) {
-      const { eventType, payload, _replyToken } = result.value;
-      if (eventType && typeof eventType === "string") {
-        sock.emit(eventType, payload, _replyToken);
-        eventDebug("%s %s %s", eventType, inspect(payload, false, 3, true), _replyToken);
-      }
-    } else {
-      eventDebug("Parse Error.")
-    }
-  });
+    this.username = "$NONE";
+    this.currentRoom = "$NONE";
+    this.sessionId = sessionId;
+    this.sid = sessionId.slice(0, 8);
+    this.subscribedChannel = new Set();
+    this.initial();
+  }
 
-  let self = sock as Client;
-  Object.defineProperties(sock, {
-    username: {
-      value: "$NONE",
-      writable: true
-    },
-    sessionId: {
-      value: sessionId,
-      writable: false
-    },
-    sid: {
-      value: sessionId.slice(0, 8),
-      writable: false
-    },
-    subscribedChannel: {
-      value: new Set()
-    },
-    currentRoom: {
-      value: "$NONE",
-      writable: true
-    },
-    exit: {
-      value: () => {
-        roomRef.container.get(self.currentRoom)?.delete(self.sessionId);
-        self.currentRoom = "$NONE";
-      },
-      writable: false
-    },
-    enter: {
-      value: (roomName: string) => {
-        methodDebug("from %s to %s", self.currentRoom, roomName);
-        roomRef.enter(self.sessionId, roomName);
-        self.currentRoom = roomName;
-      },
-      writable: false
-    },
-    subscribe: {
-      value: (channelName: string) => {
-        channelRef.subscribe(sessionId, channelName);
-        self.subscribedChannel.add(channelName);
-        methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
-      },
-      writable: false
-    },
-    unsubscribe: {
-      value: (channelName: string) => {
-        channelRef.unsubscribe(sessionId, channelName);
-        self.subscribedChannel.delete(channelName);
-        methodDebug("%s current unsubscribe: %o", self.sid, self.subscribedChannel);
-      },
-      writable: false
-    },
-    only: {
-      value: (channelName: string) => {
-        /* Clear current subscribed */
-        self.subscribedChannel.forEach(ch => channelRef.unsubscribe(sessionId, ch));
-        self.subscribedChannel.clear();
-
-        /* Trace new channel */
-        channelRef.subscribe(sessionId, channelName);
-        self.subscribedChannel.add(channelName);
-        methodDebug("%s current subscribe: %o", self.sid, self.subscribedChannel);
-      },
-      writable: false
-    },
-    useToken: {
-      value: (token: string) => {
-        const room = roomRef.useToken(token);
-        if (room) {
-          self.only(room);
-          self.enter(room);
+  /**
+   * Allow Client Proxy `onmessage` event
+   * 
+   * @description
+   * Client.initial() will listen `message` event, when receive message,
+   * try parse to JSON, if data is JSON and match DataTuple-type, emit
+   * DataTuple's `{ eventType, payload, _reply Token }`
+   */
+  public initial() {
+    const sock = this.sock;
+    sock.on("message", function eventProxy(buffer) {
+      const rawData = buffer.toString("utf8");
+      const result: Result = parse(rawData);
+      if (result.err) {
+        dd("message format is not JSON");
+      } else {
+        const { eventType, payload, _replyToken } = result.value;
+        if (eventType && typeof eventType === "string") {
+          sock.emit(eventType, payload, _replyToken);
+          dd("%s %o %s", eventType, payload, _replyToken)
         }
-        return room;
       }
-    },
-    sendout: {
-      value: <T = any>(eventType: string, payload: T) => {
-        methodDebug("TYPE: %s , DATA = %o", eventType, payload);
-        const data = JSON.stringify({ eventType, payload });
-        sock.send(data);
-      },
-      writable: false
-    },
-  });
-  openDebug("sessionId: %s", sessionId);
-  return self;
+    });
+  }
+
+  /**
+   * Leave the current room to "$NONE"
+   */
+  public exit() {
+    roomRef.container.get(this.currentRoom)?.delete(this.sessionId);
+    this.currentRoom = "$NONE";
+    dd("from %s to $NONE", this.currentRoom);
+  }
+
+  /**
+   * Leave the current room to specific room
+   */
+  public enter(rName: string) {
+    roomRef.enter(this.sessionId, rName);
+    this.currentRoom = rName;
+    dd("%s from %s to %s", this.sid, this.currentRoom, rName);
+  }
+
+  /**
+   * `channel` collection add self, `subscribedChannel` add `channel`
+   * 
+   * @description
+   * Trace a channel, when another client talk to this channel,
+   * server will broadcast to every client who subscribe this channel.
+   * @param ch channel name
+   */
+  public subscribe(ch: string) {
+    channelRef.subscribe(this.sessionId, ch);
+    this.subscribedChannel.add(ch);
+    dd("%s current subscribe: %o", this.sid, this.subscribedChannel);
+  }
+
+  /**
+   * `channel` collection remove self, `subscribedChannel` remove `channel`
+   */
+  public unsubscribe(ch: string) {
+    channelRef.unsubscribe(this.sessionId, ch);
+    this.subscribedChannel.delete(ch);
+    dd("%s current subscribe: %o", this.sid, this.subscribedChannel);
+  }
+
+  /**
+   * keep only one channel
+   * 
+   * @param {string} ch unsubscribe from channels other than this one
+   */
+  public only(ch: string) {
+    this.subscribedChannel.forEach(ch => {
+      channelRef.unsubscribe(this.sessionId, ch)
+    });
+    this.subscribedChannel.clear();
+
+    this.subscribe(ch);
+  }
+
+  public useToken(token: string) {
+      const room = roomRef.useToken(token)
+      if(room) {
+        this.only(room);
+        this.enter(room);
+      }
+      return room;
+  }
+
+  /**
+   * Package data in DataTuple format, then send it out to the network
+   * @param {string} eventType Name of the event
+   * 
+   * @param {any} payload Data content, allowing `any` type
+   * 
+   */
+  public sendout<T>(eventType: string, payload: T) {
+    const data = JSON.stringify({ eventType, payload });
+    this.sock.send(data);
+    dd("[%s] %o", eventType, payload)
+  }
+
 }

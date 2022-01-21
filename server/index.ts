@@ -1,14 +1,15 @@
 import { createServer } from "http";
 import type { Duplex } from "stream";
-import { sockServer } from "./event/websocket.js";
-import { app } from "./app.js";
+import { sockServer } from "./utils/websocket";
+import { Client } from "./utils";
+import { app } from "./app";
 
 /* Raw Http server */
 createServer(app)
   .on("upgrade", (request, socket, head) => {
     if (verifySockConnect(request, socket)) {
       sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
-        sockServer.emit("connection", ws, request);
+        sockServer.emit("connection", new Client(ws), request);
       });
     }
   })
