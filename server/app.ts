@@ -13,6 +13,5 @@ export const app = express()
   .use(helmet())
   .use(express.json());
 
-app.set("authTable", new Map<string, any>());
 app.use(staticFileRouter);
 app.use("/api/v1", verifyRouter);

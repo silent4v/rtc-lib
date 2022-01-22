@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import type { Duplex } from "stream";
 import { sockServer } from "./utils/websocket";
-import { Client } from "./utils";
+import { Client, roomRef } from "./utils";
 import { app } from "./app";
 
 /* Raw Http server */
@@ -20,9 +20,9 @@ createServer(app)
   );
 
 function verifySockConnect(req: any, socket: Duplex) {
-  const authTable = app.get("authTable");
+  const table = roomRef.tokenMatchTable;
   const authHeader = req.headers["authorization"] ?? "";
-  if (authTable.has(authHeader) || process.env.NODE_ENV?.includes("dev")) {
+  if (table.has(authHeader) || process.env.NODE_ENV?.includes("dev")) {
     return true;
   } else {
     socket.destroy();
