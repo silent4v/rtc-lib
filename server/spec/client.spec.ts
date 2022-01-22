@@ -4,22 +4,26 @@ import { Server, Client, roomRef, channelRef } from "../utils";
 let server!: Server;
 let client!: Client;
 
-beforeAll(() => {
-  const s = new WebSocketServer({ port: 30000 });
+beforeAll(done => {
+  const testPort = 10000 + (Math.random() * 5000) | 0;
+  const s = new WebSocketServer({ port: testPort });
   server = new Server(s);
-  client = new Client(new WebSocket("ws://localhost:30000"));
+  client = new Client(new WebSocket(`ws://localhost:${testPort}`));
   server.users.set(client.sessionId, client);
+  server.on("connection", () => done());
 });
 
 afterAll(() => {
-  // client.sock.close();
+  /* Hard Close */
+  server.sock.clients.forEach((c) => {
+    c.close();
+    c.terminate();
+  });
   server.sock.close();
 });
 
-describe("Client Init", () => {
-
-
-  test("default value", () => {
+describe("client wrapper", () => {
+  it("default value", () => {
     expect(client.username).toBe("$NONE");
     expect(client.sessionId.length).toBe(56);
     expect(client.sid.length).toBe(8);
@@ -27,7 +31,7 @@ describe("Client Init", () => {
     expect(client.currentRoom).toBe("$NONE");
   });
 
-  test("behavior: exit/enter room", () => {
+  it("behavior: exit/enter room", () => {
 
     client.enter("testing-room");
     expect(client.currentRoom).toBe("testing-room");
@@ -41,7 +45,7 @@ describe("Client Init", () => {
     expect(roomRef.container.size).toBe(0);
   });
 
-  test("behavior: unsubscribe/subscribe ch", () => {
+  it("behavior: unsubscribe/subscribe ch", () => {
     client.subscribe("testing-ch1");
     client.subscribe("testing-ch2");
     expect(client.subscribedChannel).toEqual(new Set([
@@ -77,4 +81,4 @@ describe("Client Init", () => {
     client.only("testing-ch1");
     expect(client.subscribedChannel).toEqual(new Set(["testing-ch1"]));
   });
-})
+});
