@@ -18,6 +18,7 @@ describe("verify route, if user data is object", () => {
       .send({
         room: "room1",
         userData,
+        permission: {}
       })
       .expect(200);
 
@@ -29,7 +30,11 @@ describe("verify route, if user data is object", () => {
   it("GET /api/v1/access/:token", async () => {
     const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
-    expect(verifyReq.body.data).toStrictEqual(userData);
+    expect(verifyReq.body.data).toStrictEqual({
+      room: "room1",
+      userData,
+      permission: {}
+    });
   });
 });
 
@@ -44,6 +49,7 @@ describe("verify route, if user data is string", () => {
       .send({
         room: "room1",
         userData,
+        permission: {}
       })
       .expect(200);
 
@@ -55,7 +61,11 @@ describe("verify route, if user data is string", () => {
   it("GET /api/v1/access/:token", async () => {
     const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
-    expect(verifyReq.body.data).toStrictEqual(userData);
+    expect(verifyReq.body.data).toStrictEqual({
+      room: "room1",
+      userData,
+      permission: {}
+    });
   });
 });
 
@@ -68,6 +78,7 @@ describe("verify route, if user data is empty", () => {
     .set("content-type", "application/json")
     .send({
       room: "room1",
+      permission: {}
     })
     .expect(200);
 
@@ -79,7 +90,11 @@ describe("verify route, if user data is empty", () => {
   it("GET /api/v1/access/:token", async () => {
     const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
-    expect(verifyReq.body.data).toStrictEqual({});
+    expect(verifyReq.body.data).toStrictEqual({
+      room: "room1",
+      userData: {},
+      permission: {}
+    });
   });
 });
 
