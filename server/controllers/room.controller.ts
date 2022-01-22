@@ -11,12 +11,8 @@ const dd = require("debug")("room");
  */
 export const onFollow = (client: Client, server: Server) =>
   (token: string, _replyToken: string) => {
-    const room = client.useToken(token);
-    if(room) {
-      client.useToken(room);
-      dd("client follow to %s", room);
-    }
-    client.sendout(_replyToken, !!room ? 1 : 0);
+    const state = client.useToken(token);
+    client.sendout(_replyToken, state ? 1 : 0);
     dd("token: %s", token);
   }
 

@@ -1,28 +1,34 @@
 import { SetManager } from "./set-manager";
 import { Server } from "./server";
 
-type RoomState = {
+export type RoomState = {
   name: string,
   clients: string[],
   type: "$room"
 }
 
+export type UserData = {
+  room: string;
+  userData: any;
+  permission
+}
+
 export class Room extends SetManager {
   static instance = new Room;
-  public tokenMatchTable = new Map<string, string>();
+  public tokenMatchTable = new Map<string, UserData>();
 
-  public setExpireToken(token: string, room: string, expireTime = 600) {
-    this.tokenMatchTable.set(token, room);
+  public setExpireToken(token: string, data: UserData, expireTime = 600) {
+    this.tokenMatchTable.set(token, data);
     return setTimeout(() => {
       this.tokenMatchTable.delete(token);
     }, expireTime * 1000);
   }
 
-  public useToken(token) {
-    if(this.tokenMatchTable.has(token)) {
-      const room = this.tokenMatchTable.get(token);
+  public takeMatchData(token) {
+    if (this.tokenMatchTable.has(token)) {
+      const data = this.tokenMatchTable.get(token) as UserData;
       this.tokenMatchTable.delete(token);
-      return room as string;
+      return data;
     }
     return null;
   }
@@ -38,8 +44,8 @@ export class Room extends SetManager {
 
   public list(channelName: string): RoomState[] {
     const basic = super.list(channelName);
-    return basic.map(({name, clients}) => ({
-      name, 
+    return basic.map(({ name, clients }) => ({
+      name,
       clients,
       type: "$room"
     }));

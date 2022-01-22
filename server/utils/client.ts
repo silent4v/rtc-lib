@@ -21,6 +21,8 @@ export class Client {
   public sessionId: string;
   public sid: string;
   public subscribedChannel: Set<string>;
+  public userData: any = {};
+  public permission: any = {};
 
   /* function delegate to rawSock */
   public on = this.sock.on.bind(this.sock);
@@ -122,13 +124,23 @@ export class Client {
     this.subscribe(ch);
   }
 
+  /**
+   * check Room#tokenMatchTable, if token in table
+   * direct user to room specified by table,
+   * then set userData , permission.
+   * 
+   * return whether the token was found in the match table
+   */
   public useToken(token: string) {
-      const room = roomRef.useToken(token)
-      if(room) {
-        this.only(room);
-        this.enter(room);
+      const data = roomRef.takeMatchData(token)
+      if(data) {
+        this.only(data.room);
+        this.enter(data.room);
+        this.userData = data.userData;
+        this.permission = data.permission;
       }
-      return room;
+      dd("useToken: %o", data);
+      return !!data;
   }
 
   /**

@@ -110,7 +110,11 @@ describe("messenger.controller websocket event", () => {
   });
 
   it("when user use token enter room", done => {
-    const expireTimer = roomRef.setExpireToken("test-token", "testRoom");
+    const expireTimer = roomRef.setExpireToken("test-token", {
+      room: "testRoom",
+      userData: {},
+      permission: {}
+    });
     client.once("room::test", recData => {
       expect(client.currentRoom).toBe("testRoom");
       expect([...client.subscribedChannel.values()]).toStrictEqual(["testRoom"]);
