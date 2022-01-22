@@ -16,6 +16,8 @@ export const onInformation = (client: Client, server: Server) =>
       sessionId: client.sessionId,
       currentRoom: client.currentRoom,
       subscribedChannel: [...client.subscribedChannel.values()],
+      userData: client.userData,
+      permission: client.permission
     });
   }
 

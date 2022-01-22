@@ -1,7 +1,9 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { Server, Client } from "../utils";
 import {
-  onInformation, onPingPong, onRegister
+  onInformation,
+  onPingPong,
+  onRegister
 } from "../controllers/client.controller";
 
 let server!: Server;
@@ -44,6 +46,8 @@ describe("client.controller websocket event", () => {
     client.once("client::test", recData => {
       expect(recData.currentRoom).toBe("$NONE");
       expect(recData.subscribedChannel).toStrictEqual([]);
+      expect(recData.userData).toStrictEqual({});
+      expect(recData.permission).toStrictEqual({});
       done();
     });
     onInformation(client, server)(null, "client::test");
