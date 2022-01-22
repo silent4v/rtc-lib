@@ -39,13 +39,13 @@ export const onRtcRequest = (client: Client, server: Server) =>
  */
 export const onRtcResponse = (client: Client, server: Server) =>
   ({ sdp }, _replyToken) => {
-    if( !activeTable.has(_replyToken) ) return;
+    if (!activeTable.has(_replyToken)) return;
     const callerSid = activeTable.get(_replyToken) as string;
     const caller = server.users.get(callerSid);
-    if(!caller) return;
+    if (!caller) return;
 
     /* server forward callee SDP to caller */
-    caller.sendout(_replyToken, { sdp , sessionId: client.sessionId});
+    caller.sendout(_replyToken, { sdp, sessionId: client.sessionId });
     activeTable.delete(_replyToken);
 
     dd("%s reply %s", client.sid, caller.sid);
@@ -57,15 +57,15 @@ export const onRtcResponse = (client: Client, server: Server) =>
  * @description
  * server as forwarder, exchange peer-to-peer ICE candidate.
  */
-export const onRtcExchange = (client: Client, server: Server) => 
+export const onRtcExchange = (client: Client, server: Server) =>
   ({ candidate, sessionId }) => {
     const targetUser = server.users.get(sessionId);
-    if(targetUser)
+    if (targetUser)
       targetUser.sendout("rtc::exchange", { candidate, sessionId: client.sessionId });
   }
 
-  export const RtcEventRegistry = (c: Client, s: Server) => {
-    c.on("rtc::request", onRtcRequest(c, s));
-    c.on("rtc::response", onRtcResponse(c, s));
-    c.on("rtc::exchange", onRtcExchange(c, s));
-  }
+export const RtcEventRegistry = (c: Client, s: Server) => {
+  c.on("rtc::request", onRtcRequest(c, s));
+  c.on("rtc::response", onRtcResponse(c, s));
+  c.on("rtc::exchange", onRtcExchange(c, s));
+}
