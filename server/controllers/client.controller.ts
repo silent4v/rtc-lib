@@ -19,7 +19,6 @@ export const onInformation = (client: Client, server: Server) =>
     });
   }
 
-
 /**
  * @event request::register
  *

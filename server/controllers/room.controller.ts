@@ -12,6 +12,10 @@ const dd = require("debug")("room");
 export const onFollow = (client: Client, server: Server) =>
   (token: string, _replyToken: string) => {
     const room = client.useToken(token);
+    if(room) {
+      client.useToken(room);
+      dd("client follow to %s", room);
+    }
     client.sendout(_replyToken, !!room ? 1 : 0);
     dd("token: %s", token);
   }
@@ -67,7 +71,7 @@ export const onExit = (client: Client, server: Server) =>
 
 /**
  * @event request::room::list
- * 
+ *
  * @description
  * Receive a room name that lists the information for the specified room.
  * if the room name is `$DEFAULT`, lists all rooms.
