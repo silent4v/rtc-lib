@@ -13,18 +13,20 @@ const activeTable = new Map<string, string>();
  * server will forward `_replyToken` to callee,
  * callee can use `_replyToken` responed caller.
  * replyToken will expire after 1 minutes
+ * 
+ * because of testing, it will return number for `clearTimeout` invoke
  */
 export const onRtcRequest = (client: Client, server: Server) =>
   ({ sdp, sessionId }, _replyToken) => {
     const targetUser = server.users.get(sessionId);
-    if (!targetUser || !sessionId) return;
+    if (!targetUser || !sessionId) return 0;
 
     activeTable.set(_replyToken, client.sessionId);
     targetUser.sendout("rtc::request", { sdp, sessionId: client.sessionId, _replyToken });
-    setTimeout(() => {
+    dd("%s calls %s [token:%s]", client.sid, targetUser.sid, _replyToken);
+    return setTimeout(() => {
       activeTable.delete(_replyToken);
     }, waitingTimeLimit);
-    dd("%s calls %s [token:%s]", client.sid, targetUser.sid, _replyToken);
   }
 
 /**
