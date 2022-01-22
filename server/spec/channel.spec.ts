@@ -2,62 +2,57 @@ import { Channel } from "../utils/channel";
 
 const randStr = () => Math.random().toString(36);
 
-describe("subscribe", () => {
-  const channel = new Channel;
-
-  /* ch1 */
-  channel.subscribe("user1", "ch1");
-  channel.subscribe("user2", "ch1");
-  channel.subscribe("user3", "ch1");
-  channel.subscribe("user4", "ch1");
-
-  /* ch2 */
-  channel.subscribe("user2", "ch2");
-  channel.subscribe("user3", "ch2");
-  channel.subscribe("user5", "ch2");
-
-  /* ch3 */
-  channel.subscribe("user1", "ch3");
-  channel.subscribe("user3", "ch3");
-  channel.subscribe("user5", "ch3");
-
+describe("channel utils test", () => {
   it("check users subscribe behavior", () => {
+    const channel = new Channel;
+    /* ch1 */
+    channel.subscribe("user1", "ch1");
+    channel.subscribe("user2", "ch1");
+    channel.subscribe("user3", "ch1");
+    channel.subscribe("user4", "ch1");
+
+    /* ch2 */
+    channel.subscribe("user2", "ch2");
+    channel.subscribe("user3", "ch2");
+    channel.subscribe("user5", "ch2");
+
+    /* ch3 */
+    channel.subscribe("user1", "ch3");
+    channel.subscribe("user3", "ch3");
+    channel.subscribe("user5", "ch3");
+
     expect([...channel.container.get("ch1")!.values()]).toStrictEqual(["user1", "user2", "user3", "user4"]);
     expect([...channel.container.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
     expect([...channel.container.get("ch3")!.values()]).toStrictEqual(["user1", "user3", "user5"]);
   });
-});
-
-describe("unsubscribe", () => {
-  const channel = new Channel;
-
-  /* ch1 */
-  channel.subscribe("user1", "ch1")
-    .subscribe("user2", "ch1")
-    .unsubscribe("user2", "ch1")
-    .subscribe("user3", "ch1")
-    .subscribe("user4", "ch1")
-
-  /* ch2 */
-  channel.subscribe("user2", "ch2")
-    .subscribe("user3", "ch2")
-    .subscribe("user5", "ch2")
-
-  /* ch3 */
-  channel.subscribe("user1", "ch3")
-    .subscribe("user3", "ch3")
-    .subscribe("user5", "ch3")
-    .unsubscribe("user5", "ch3")
-    .unsubscribe("user6", "ch3")
 
   it("check users unsubscribe behavior", () => {
+    const channel = new Channel;
+
+    /* ch1 */
+    channel.subscribe("user1", "ch1")
+      .subscribe("user2", "ch1")
+      .unsubscribe("user2", "ch1")
+      .subscribe("user3", "ch1")
+      .subscribe("user4", "ch1")
+
+    /* ch2 */
+    channel.subscribe("user2", "ch2")
+      .subscribe("user3", "ch2")
+      .subscribe("user5", "ch2")
+
+    /* ch3 */
+    channel.subscribe("user1", "ch3")
+      .subscribe("user3", "ch3")
+      .subscribe("user5", "ch3")
+      .unsubscribe("user5", "ch3")
+      .unsubscribe("user6", "ch3")
+
     expect([...channel.container.get("ch1")!.values()]).toStrictEqual(["user1", "user3", "user4"]);
     expect([...channel.container.get("ch2")!.values()]).toStrictEqual(["user2", "user3", "user5"]);
     expect([...channel.container.get("ch3")!.values()]).toStrictEqual(["user1", "user3"]);
   });
-});
 
-describe("append", () => {
   it("check append channel", () => {
     const channel = new Channel;
 
@@ -75,32 +70,25 @@ describe("append", () => {
       { name: "c4", clients: [], type: "$channel" },
     ])
   });
-});
-
-describe("list - mock", () => {
-  const channel = new Channel;
-
-  expect(channel.list()).toStrictEqual([]);
-
-  for (let i = 0; i < 10; ++i) channel.subscribe(randStr(), "ch1");
-  for (let i = 0; i < 5; ++i) channel.subscribe(randStr(), "ch2");
-  for (let i = 0; i < 8; ++i) channel.subscribe(randStr(), "ch3");
-  for (let i = 0; i < 13; ++i) channel.subscribe(randStr(), "ch4");
-  for (let i = 0; i < 26; ++i) channel.subscribe(randStr(), "ch5");
 
   it("if user subscribe channel, check user number of channel ", () => {
+    const channel = new Channel;
+
+    expect(channel.list()).toStrictEqual([]);
+    for (let i = 0; i < 10; ++i) channel.subscribe(randStr(), "ch1");
+    for (let i = 0; i < 5; ++i) channel.subscribe(randStr(), "ch2");
+    for (let i = 0; i < 8; ++i) channel.subscribe(randStr(), "ch3");
+    for (let i = 0; i < 13; ++i) channel.subscribe(randStr(), "ch4");
+    for (let i = 0; i < 26; ++i) channel.subscribe(randStr(), "ch5");
     expect(channel.container.get("ch1")?.size).toBe(10);
     expect(channel.container.get("ch2")?.size).toBe(5);
     expect(channel.container.get("ch3")?.size).toBe(8);
     expect(channel.container.get("ch4")?.size).toBe(13);
     expect(channel.container.get("ch5")?.size).toBe(26);
   });
-});
 
-describe("receive request::room::list request", () => {
   it("simulate a user sub/unsub channels", () => {
     const channel = new Channel;
-
     channel
       /* ch1 */
       .subscribe("u01", "c1")
