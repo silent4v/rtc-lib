@@ -9,7 +9,7 @@ export const issueAccessToken: RequestHandler = (req, res) => {
   const token = crypto.randomBytes(16).toString("hex");
   authTable.set(token, isJsonString(data));
   if( !room ) {
-    res.status(400).json({ message: "invaild room" })
+    res.status(400).json({ message: "invaild room" });
   }
 
   roomRef.setExpireToken(token, room as string);

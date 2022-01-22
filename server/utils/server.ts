@@ -17,6 +17,6 @@ export class Server {
   public broadcast(eventType: string, payload: any) {
     this.users.forEach(sock => {
       sock.sendout(eventType, payload);
-    })
+    });
   }
 }

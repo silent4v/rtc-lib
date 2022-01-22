@@ -1,7 +1,7 @@
 import { SetManager } from "./set-manager";
 import { Server } from "./server";
 
-type RoomState = { 
+type RoomState = {
   name: string,
   clients: string[],
   type: "$room"
@@ -13,7 +13,7 @@ export class Room extends SetManager {
 
   public setExpireToken(token: string, room: string, expireTime = 600) {
     this.tokenMatchTable.set(token, room);
-    setTimeout(() => {
+    return setTimeout(() => {
       this.tokenMatchTable.delete(token);
     }, expireTime * 1000);
   }

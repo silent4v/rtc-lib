@@ -59,7 +59,7 @@ export const onRtcExchange = (client: Client, server: Server) =>
   ({ candidate, sessionId }) => {
     const targetUser = server.users.get(sessionId);
     if(targetUser)
-      targetUser.sendout("rtc::exchange", { candidate, sessionId: client.sessionId })
+      targetUser.sendout("rtc::exchange", { candidate, sessionId: client.sessionId });
   }
 
   export const RtcEventRegistry = (c: Client, s: Server) => {
