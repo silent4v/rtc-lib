@@ -7,5 +7,5 @@ import {
 
 export const verifyRouter = Router();
 verifyRouter.use(AuthMiddleware);
-verifyRouter.get("/access", issueAccessToken);
-verifyRouter.post("/access/:token", verifyAccessToken);
+verifyRouter.post("/access", issueAccessToken);
+verifyRouter.get("/access/:token", verifyAccessToken);

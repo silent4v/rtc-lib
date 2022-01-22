@@ -11,11 +11,14 @@ describe("verify route, if user data is object", () => {
     }
   };
 
-  it("GET /api/v1/access?data=<object>", async () => {
+  it("POST /api/v1/access", async () => {
     response = await request(app)
-      .get("/api/v1/access")
-      .query({ data: JSON.stringify(userData) })
-      .query({ room: "room" })
+      .post("/api/v1/access")
+      .set("content-type", "application/json")
+      .send({
+        room: "room1",
+        userData,
+      })
       .expect(200);
 
     const token = response.body.token;
@@ -23,8 +26,8 @@ describe("verify route, if user data is object", () => {
     expect(/[0-9a-f]{16}/.test(token)).toBeTruthy();
   });
 
-  it("POST /api/v1/access/:token", async () => {
-    const verifyReq = await request(app).post(`/api/v1/access/${response.body.token}`);
+  it("GET /api/v1/access/:token", async () => {
+    const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
     expect(verifyReq.body.data).toStrictEqual(userData);
   });
@@ -34,11 +37,14 @@ describe("verify route, if user data is string", () => {
   let response;
   const userData = "STRING";
 
-  it("GET /api/v1/access?data=string", async () => {
+  it("POST /api/v1/access", async () => {
     response = await request(app)
-      .get("/api/v1/access")
-      .query({ data: userData })
-      .query({ room: "room" })
+      .post("/api/v1/access")
+      .set("content-type", "application/json")
+      .send({
+        room: "room1",
+        userData,
+      })
       .expect(200);
 
     const token = response.body.token;
@@ -46,8 +52,8 @@ describe("verify route, if user data is string", () => {
     expect(/[0-9a-f]{16}/.test(token)).toBeTruthy();
   });
 
-  it("POST /api/v1/access/:token", async () => {
-    const verifyReq = await request(app).post(`/api/v1/access/${response.body.token}`);
+  it("GET /api/v1/access/:token", async () => {
+    const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
     expect(verifyReq.body.data).toStrictEqual(userData);
   });
@@ -56,19 +62,22 @@ describe("verify route, if user data is string", () => {
 describe("verify route, if user data is empty", () => {
   let response;
 
-  it("GET /api/v1/access", async () => {
+  it("POST /api/v1/access", async () => {
     response = await request(app)
-      .get("/api/v1/access")
-      .query({ room: "room" })
-      .expect(200);
+    .post("/api/v1/access")
+    .set("content-type", "application/json")
+    .send({
+      room: "room1",
+    })
+    .expect(200);
 
     const token = response.body.token;
     expect(token.length).toEqual(32);
     expect(/[0-9a-f]{16}/.test(token)).toBeTruthy();
   });
 
-  it("POST /api/v1/access/:token", async () => {
-    const verifyReq = await request(app).post(`/api/v1/access/${response.body.token}`);
+  it("GET /api/v1/access/:token", async () => {
+    const verifyReq = await request(app).get(`/api/v1/access/${response.body.token}`);
     expect(verifyReq.body.state).toBe("authorized");
     expect(verifyReq.body.data).toStrictEqual({});
   });
@@ -77,16 +86,17 @@ describe("verify route, if user data is empty", () => {
 describe("verify route, when request failed", () => {
   let response;
 
-  it("GET /api/v1/access", async () => {
+  it("POST /api/v1/access", async () => {
     response = await request(app)
-      .get("/api/v1/access")
-      .expect(400);
+    .post("/api/v1/access")
+    .set("content-type", "application/json")
+    .expect(400);
 
     expect(response.body.message).toEqual("invaild room");
   });
 
-  it("POST /api/v1/access/:token", async () => {
-    const verifyReq = await request(app).post(`/api/v1/access/wrong-token`);
+  it("GET /api/v1/access/:token", async () => {
+    const verifyReq = await request(app).get(`/api/v1/access/wrong-token`);
     expect(verifyReq.body.state).toBe("unauthorized");
     expect(verifyReq.body.data).toBe(undefined);
   });

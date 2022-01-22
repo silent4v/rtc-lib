@@ -3,16 +3,16 @@ import type { RequestHandler } from "express";
 import { roomRef } from "../utils/room";
 
 export const issueAccessToken: RequestHandler = (req, res) => {
-  const room = req.query?.room;
-  const data = req.query?.data ?? {};
+  const body = req.body ?? {};
   const authTable = req.app.get("authTable") as Map<string, any>;
   const token = crypto.randomBytes(16).toString("hex");
-  authTable.set(token, isJsonString(data));
-  if( !room ) {
+
+  authTable.set(token, isJsonString(body.userData ?? {}));
+  if( !body.room ) {
     res.status(400).json({ message: "invaild room" });
   }
 
-  roomRef.setExpireToken(token, room as string);
+  roomRef.setExpireToken(token, body.room as string);
   res.status(200).json({ token });
 }
 
