@@ -42,6 +42,11 @@ export class Client {
     this.sid = sessionId.slice(0, 8);
     this.subscribedChannel = new Set();
     this.initial();
+
+    this.on("close", () => {
+      this.subscribedChannel.forEach(ch => this.unsubscribe(ch));
+      this.exit();
+    });
   }
 
   /**
@@ -132,15 +137,15 @@ export class Client {
    * return whether the token was found in the match table
    */
   public useToken(token: string) {
-      const data = roomRef.takeMatchData(token)
-      if(data) {
-        this.only(data.room);
-        this.enter(data.room);
-        this.userData = data.userData;
-        this.permission = data.permission;
-      }
-      dd("useToken: %o", data);
-      return !!data;
+    const data = roomRef.takeMatchData(token)
+    if (data) {
+      this.only(data.room);
+      this.enter(data.room);
+      this.userData = data.userData;
+      this.permission = data.permission;
+    }
+    dd("useToken: %o", data);
+    return !!data;
   }
 
   /**

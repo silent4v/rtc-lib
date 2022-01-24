@@ -1,3 +1,5 @@
+import { resolve } from "path";
+import type { UserData } from "..//utils/room";
 import type { Client, Server } from "../utils";
 import { channelRef } from "../utils";
 
@@ -53,6 +55,7 @@ export const onTextMessage = (client: Client, server: Server) =>
       type: "text",
       message,
       from: `${client.sessionId}::${client.username}`,
+      userData: client.userData,
       at: recvTime
     }
 
@@ -75,6 +78,7 @@ export interface TalkMessageResponse {
   type: "text" | "image",
   message: any,
   from: string,
+  userData: UserData,
   at: number,
 }
 
