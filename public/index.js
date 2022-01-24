@@ -6,6 +6,8 @@ const connectionBtn = document.querySelector("#connectionBtn");
 const readyStateBox = document.querySelector("#readyState");
 const Buttons = document.querySelectorAll("button:not(#connectionBtn)");
 const Inputs = document.querySelectorAll("input, select");
+const testFollowTokenBtn = document.querySelector("#testFollowTokenBtn");
+
 Buttons.forEach(btn => { btn.disabled = true; });
 Inputs.forEach(input => { input.disabled = true; });
 
@@ -28,7 +30,7 @@ registerBtn.onclick = async () => {
   Inputs.forEach(input => { input.disabled = false; });
 
   window.snapshot = await RTC.request("room::list");
-  
+
   /* Build Default List */
   for (let i = 1; i <= 6; ++i) {
     const roomName = `Room${i}`;
@@ -111,3 +113,22 @@ function detechUserChange({ from, to, sessionId, username }) {
 
   userInRoom.textContent = JSON.stringify(window.snapshot, null, 4);
 }
+testFollowTokenBtn.onclick = async () => {
+  const res1 = await fetch("http://localhost:30000/api/v1/access", {
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      room: "room2",
+      userData: {
+        ID: "anotherId",
+        name: "nickname"
+      },
+      permission: { text: true }
+    }),
+    method: "post"
+  });
+
+  const { token } = await res1.json();
+  await RTC.request("room::follow", token);
+  const selfInfo = await RTC.request("information");
+  console.log(selfInfo);
+};

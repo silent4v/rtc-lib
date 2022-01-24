@@ -25,6 +25,7 @@
   <p>
     <button id="connectionBtn">START Connection</button>
     <button id="registerBtn">Register</button>
+    <button id="testFollowTokenBtn">Test follow Token</button>
   </p>
   <p>Current connect state: <span id="readyState"></span></p>
   <p>My SessionId: <span id="SessionId"></span></p>
@@ -70,13 +71,13 @@
   <h2>Audio Chat example</h2>
   <button id="connectBtn">Connect</button>
   <p>
-    <div>Enter into</div>
-    <label><input type="radio" name="targetRoom" value="Room1">Room 1</input></label>
-    <label><input type="radio" name="targetRoom" value="Room2">Room 2</input></label>
-    <label><input type="radio" name="targetRoom" value="Room3">Room 3</input></label>
-    <label><input type="radio" name="targetRoom" value="Room4">Room 4</input></label>
-    <label><input type="radio" name="targetRoom" value="Room5">Room 5</input></label>
-    <label><input type="radio" name="targetRoom" value="Room6">Room 6</input></label>
+  <div>Enter into</div>
+  <label><input type="radio" name="targetRoom" value="Room1">Room 1</input></label>
+  <label><input type="radio" name="targetRoom" value="Room2">Room 2</input></label>
+  <label><input type="radio" name="targetRoom" value="Room3">Room 3</input></label>
+  <label><input type="radio" name="targetRoom" value="Room4">Room 4</input></label>
+  <label><input type="radio" name="targetRoom" value="Room5">Room 5</input></label>
+  <label><input type="radio" name="targetRoom" value="Room6">Room 6</input></label>
   <pre id="userInRoom"></pre>
   <div id="stateLogBox"></div>
   </p>
@@ -85,5 +86,4 @@
 <script type="module" src="index.js" defer></script>
 <script type="module" src="chat.js" defer></script>
 <script type="module" src="audio.js" defer></script>
-
 </html>
