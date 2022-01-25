@@ -1,7 +1,10 @@
 const { Connector } = RTCCore;
 window.RTC = null;
 window.snapshot = null;
+window.authHeader = null;
+
 const userInRoom = document.querySelector("#userInRoom");
+const fetchFollowTokenBtn = document.querySelector("#fetchFollowTokenBtn");
 const connectionBtn = document.querySelector("#connectionBtn");
 const readyStateBox = document.querySelector("#readyState");
 const Buttons = document.querySelectorAll("button:not(#connectionBtn)");
@@ -11,8 +14,13 @@ const testFollowTokenBtn = document.querySelector("#testFollowTokenBtn");
 Buttons.forEach(btn => { btn.disabled = true; });
 Inputs.forEach(input => { input.disabled = true; });
 
+
+fetchFollowTokenBtn.disabled = false;
 connectionBtn.onclick = async () => {
-  RTC = new Connector(window.location.href.replace(/^http/, "ws").replace(/(\/)?$/, "/websocket/start"));
+  RTC = new Connector(
+    window.location.href.replace(/^http/, "ws").replace(/(\/)?$/, "/websocket/start"),
+    window.authHeader
+  );
   // RTC.trace("*");
   readyStateBox.textContent = "Connecting";
   RTC.sockRef.addEventListener("open", () => {
@@ -114,7 +122,9 @@ function detechUserChange({ from, to, sessionId, username }) {
   userInRoom.textContent = JSON.stringify(window.snapshot, null, 4);
 }
 testFollowTokenBtn.onclick = async () => {
-  const res1 = await fetch("http://localhost:30000/api/v1/access", {
+  const path = `${location.pathname}/api/v1/access`.replaceAll("//", "/");
+  console.log({ path });
+  const res1 = await fetch(`${location.origin}${path}`, {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       room: "room2",
@@ -131,4 +141,25 @@ testFollowTokenBtn.onclick = async () => {
   await RTC.request("room::follow", token);
   const selfInfo = await RTC.request("information");
   console.log(selfInfo);
+};
+
+fetchFollowTokenBtn.onclick = async () => {
+  const path = `${location.pathname}/api/v1/access`.replaceAll("//", "/");
+  console.log({ path });
+  const res = await fetch(`${location.origin}${path}`, {
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      room: "room",
+      userData: {
+        ID: "anotherId",
+        name: "nickname"
+      },
+      permission: { text: true }
+    }),
+    method: "post"
+  });
+
+  const { token } = await res.json();
+  window.authHeader = token;
+  console.log(token);
 };
