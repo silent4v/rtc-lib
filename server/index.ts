@@ -1,11 +1,15 @@
-import { createServer } from "http";
+import { createServer, IncomingMessage } from "http";
 import type { Duplex } from "stream";
 import { sockServer } from "./utils/websocket";
 import { Client, roomRef } from "./utils";
 import { app } from "./app";
+const dd = require("debug")("wss")
 
 /* Raw Http server */
 createServer(app)
+  .listen(process.env.PORT, "0.0.0.0")
+
+createServer()
   .on("upgrade", (request, socket, head) => {
     if (verifySockConnect(request, socket)) {
       sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
@@ -14,15 +18,17 @@ createServer(app)
     }
   })
   .listen(
-    process.env.PORT,
+    process.env.WS_PORT ?? parseInt(process.env.PORT as any, 10) + 1000,
     "0.0.0.0",
     () => console.log(`HTTP Server run at http://localhost:${process.env.PORT}`)
   );
 
-function verifySockConnect(req: any, socket: Duplex) {
+function verifySockConnect(req: IncomingMessage, socket: Duplex) {
   const table = roomRef.tokenMatchTable;
-  const authHeader = req.headers["authorization"] ?? "";
+  const authHeader = req.headers["authorization"] ?? req.headers["sec-websocket-protocol"] ?? "";
+  dd("receive authHeader '%s'", authHeader);
   if (table.has(authHeader) || process.env.NODE_ENV?.includes("dev")) {
+    dd("auth success");
     return true;
   } else {
     socket.destroy();

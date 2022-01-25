@@ -5,5 +5,27 @@ const dd = require("debug")("conf")
 
 const DIRNAME = resolve(__dirname, "..", "..", "..", ".env");
 
-export const config = dotenv.config({ path: `${DIRNAME}` });
-dd("%o", config);
+export const config = dotenv.config({ path: `${DIRNAME}` }).parsed;
+
+/* Config check */
+const { PORT, WS_PORT } = config ?? {};
+if (!PORT || !WS_PORT) {
+  const errorBags: Object[] = [];
+  console.error("Config Error");
+  if (!PORT) errorBags.push({
+    key: "PORT",
+    message: "PORT not define",
+    value: PORT
+  });
+  if (!WS_PORT) errorBags.push({
+    key: "WS_PORT",
+    message: "WS_PORT not define",
+    value: WS_PORT
+  });
+
+  console.info(errorBags);
+  process.exit();
+}
+
+
+dd("%O", config);
