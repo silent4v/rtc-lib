@@ -7,7 +7,7 @@ let client!: Client;
 beforeAll(done => {
   const testPort = 10000 + (Math.random() * 5000) | 0;
   const s = new WebSocketServer({ port: testPort });
-  server = new Server(s);
+  server = Server.from(s);
   client = new Client(new WebSocket(`ws://localhost:${testPort}`));
   server.users.set(client.sessionId, client);
   server.on("connection", () => done());

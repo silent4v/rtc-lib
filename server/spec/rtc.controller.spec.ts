@@ -1,5 +1,5 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { Server, Client, channelRef } from "../utils";
+import { Server, Client } from "../utils";
 import {
   onRtcRequest,
   onRtcResponse,
@@ -13,7 +13,7 @@ let c2!: Client;
 beforeAll(done => {
   const testPort = 10000 + (Math.random() * 5000) | 0;
   const s = new WebSocketServer({ port: testPort });
-  server = new Server(s);
+  server = Server.from(s);
   c1 = new Client(new WebSocket(`ws://localhost:${testPort}`));
   c2 = new Client(new WebSocket(`ws://localhost:${testPort}`));
   server.users.set(c1.sessionId, c1);

@@ -6,9 +6,9 @@ import { RoomEventRegistry } from "../controllers/room.controller";
 import { RtcEventRegistry } from "../controllers/rtc.controller";
 import debug from "debug";
 
-const log = debug("Connection");
+const dd = debug("Connection");
 
-export const sockServer = new Server(new WebSocketServer({ noServer: true }));
+export const sockServer = Server.from(new WebSocketServer({ noServer: true }));
 
 sockServer.on("connection", (client: Client) => {
   const s = sockServer;

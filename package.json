@@ -10,10 +10,10 @@
     "tsc-watch": "tsc -p ./tsconfig.json -w",
     "rollup": "rollup -c rollup.config.js",
     "build": "run-s tsc-build rollup",
-    "serve": "cross-env DEBUG=conf,rtc* node release/server",
+    "serve": "cross-env DEBUG=conf,wss,rtc* node release/server",
     "docs:build": "npx jsdoc -c jsdoc.json",
     "docs": "npm-run-all build:tsc docs:build",
-    "test": "jest"
+    "test": "cross-env NODE_ENV=test jest"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.1",
