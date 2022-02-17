@@ -45,6 +45,7 @@ function verifySockConnect(req: IncomingMessage, socket: Duplex) {
     dd("auth success");
     return true;
   } else {
+    dd("Fail, recv %s", authHeader);
     socket.destroy();
     return false;
   }
