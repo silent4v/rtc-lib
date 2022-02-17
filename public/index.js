@@ -130,7 +130,7 @@ testFollowTokenBtn.onclick = async () => {
   const res1 = await fetch(`${location.origin}${path}`, {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      room: "room2",
+      room: "channel1",
       userData: {
         ID: "anotherId",
         name: "nickname"

@@ -10,7 +10,9 @@ import {
 /* RESTful Application */
 export const app = express()
   .use(cors())
-  .use(helmet())
+  .use(helmet({
+    contentSecurityPolicy: false,
+  }))
   .use(express.json());
 
 app.use(staticFileRouter);

@@ -12,12 +12,15 @@ const targetChannel = document.querySelector("#targetChannel");
 
 refreshLog.onclick = () => {
   logBox.innerHTML = "";
-}
+};
 
 addUser.onclick = async () => {
   usersCount++;
   const username = `USER_${usersCount.toString().padStart(3, 0)}`;
-  const client = new RTCCore.Connector(window.location.href.replace(/^http/, "ws"));
+  const client = new RTCCore.Connector(
+    window.location.href.replace(/^http/, "ws")
+      .replace(":30000", ":31000")
+  );
   const sid = await client.register(username);
 
   const userCard = document.createElement("div");
@@ -29,7 +32,7 @@ addUser.onclick = async () => {
     const [_, remote] = from.split("::");
     const log = document.createElement("p");
     log.textContent = `[${new Date(at).toLocaleTimeString()}] ${remote}@${channelName} say ${message} to ${username}`;
-    log.className = "log"
+    log.className = "log";
     logBox.append(log);
   });
 

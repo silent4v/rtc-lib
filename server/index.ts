@@ -6,6 +6,7 @@ import cors from "cors";
 import { sockServer } from "./utils/websocket";
 import { Client, roomRef } from "./utils";
 import { app } from "./app";
+import { staticFileRouter } from "./routes";
 
 const dd = require("debug")("wss")
 
@@ -17,7 +18,7 @@ createServer(app)
     () => console.log(`HTTP   Server run at http://localhost:${process.env.PORT}`)
   );
 
-
+/* Websocket server */
 const wsApp = express()
   .use(cors())
   .use(helmet());
