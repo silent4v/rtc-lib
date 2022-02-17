@@ -25,11 +25,11 @@ const wsApp = express()
 
 createServer(wsApp)
   .on("upgrade", (request, socket, head) => {
-    if (verifySockConnect(request, socket)) {
-      sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
-        sockServer.emit("connection", new Client(ws), request);
-      });
-    }
+    sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
+      const client = new Client(ws);
+      client.authorization = verifySockConnect(request, socket);
+      sockServer.emit("connection", client, request);
+    });
   })
   .listen(
     process.env.WS_PORT,
@@ -41,12 +41,5 @@ function verifySockConnect(req: IncomingMessage, socket: Duplex) {
   const table = roomRef.tokenMatchTable;
   const authHeader = req.headers["authorization"] ?? req.headers["sec-websocket-protocol"] ?? "";
   dd("receive authHeader '%s'", authHeader);
-  if (table.has(authHeader) || process.env.NODE_ENV?.includes("dev")) {
-    dd("auth success");
-    return true;
-  } else {
-    dd("Fail, recv %s", authHeader);
-    socket.destroy();
-    return false;
-  }
+  return table.has(authHeader);
 }

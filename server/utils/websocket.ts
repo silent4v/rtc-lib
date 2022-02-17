@@ -6,13 +6,22 @@ import { RoomEventRegistry } from "../controllers/room.controller";
 import { RtcEventRegistry } from "../controllers/rtc.controller";
 import debug from "debug";
 
-const dd = debug("Connection");
+const dd = debug("client");
 
 export const sockServer = Server.from(new WebSocketServer({ noServer: true }));
 
 sockServer.on("connection", (client: Client) => {
   const s = sockServer;
   const c = client;
+  dd("client.authorization %s", client.authorization);
+
+  if (!client.authorization) {
+    client.sendout("unauthorize", { message: "session end" });
+    if (true||!process.env.NODE_ENV?.includes("dev")) {
+      client.sock.close();
+    }
+    return;
+  }
 
   sockServer.users.set(client.sessionId, client);
   MsgEventRegistry(c, s);

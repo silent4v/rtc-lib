@@ -119,6 +119,9 @@ export class Connector {
       }
     }
 
+    this.on("unauthorize", () => {
+      this.close();
+    })
     /* Try to reconnect to server. */
     this.sockRef.onclose = e => {
       warning("Connector::close", "close");
@@ -140,7 +143,7 @@ export class Connector {
   private async reconnect(sock: WebSocket) {
     let retryTime = 3;
     let retryInterval = 1000;
-    while (--retryTime > 0) {
+    while (retryTime > 0) {
       if (await waiting(sock)) {
         /* Success connect to websocket server */
         this.sockRef = sock;
@@ -152,6 +155,7 @@ export class Connector {
       }
       await delay(retryInterval);
       warning("WebSocket", `Reconnect: ${retryTime} time`);
+      --retryTime;
     }
 
     if (await waiting(sock) === false)

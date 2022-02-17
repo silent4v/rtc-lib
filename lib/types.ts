@@ -10,6 +10,9 @@ export interface OnEventType {
   on(eventType: "close", callback: EventCallback<Event>): this;
   on(eventType: "reconnect", callback: EventCallback<null>): this;
 
+  /* Basic Event */
+  on(eventType: "unauthorize", callback: EventCallback<Event>): this;
+
   /* Messenger Event */
   on(eventType: "text::highPressure", callback: EventCallback<number>): this;
   on(eventType: "text::remove", callback: EventCallback<Message>): this;
@@ -32,6 +35,7 @@ export type EventTypes =
   | "close"
   | "error"
   | "reconnect"
+  | "unauthorize"
   | "text::message"
   | "text::highPressure"
   | "text::remove"

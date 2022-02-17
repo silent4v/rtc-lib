@@ -24,6 +24,7 @@ export class Client {
   public subscribedChannel: Set<string>;
   public userData: any = {};
   public permission: any = {};
+  public authorization = false;
 
   /* function delegate to rawSock */
   public on = this.sock.on.bind(this.sock);
