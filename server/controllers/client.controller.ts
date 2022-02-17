@@ -34,7 +34,7 @@ export const onRegister = (client: Client, _) =>
     client.sendout(_replyToken, {
       sessionId: client.sessionId
     });
-    dd("recv %o", { _replyToken, username });
+    dd("recv %O", { _replyToken, username });
   }
 
 /**

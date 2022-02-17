@@ -68,9 +68,11 @@ export const onTextMessage = (client: Client, server: Server) =>
   }
 
 export const MsgEventRegistry = (c: Client, s: Server) => {
+  const textMessageHandler = onTextMessage(c, s);
   c.on("request::text::subscribe", onSubscribe(c, s));
   c.on("request::text::unsubscribe", onUnsubscribe(c, s));
-  c.on("request::text::message", onTextMessage(c, s));
+  c.on("request::text::message", textMessageHandler);
+  c.eventPool.set("request::text::message", textMessageHandler as any);
 }
 
 export interface TalkMessageResponse {

@@ -1,15 +1,28 @@
 import { createServer, IncomingMessage } from "http";
 import type { Duplex } from "stream";
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
 import { sockServer } from "./utils/websocket";
 import { Client, roomRef } from "./utils";
 import { app } from "./app";
+
 const dd = require("debug")("wss")
 
 /* Raw Http server */
 createServer(app)
-  .listen(process.env.PORT, "0.0.0.0")
+  .listen(
+    process.env.PORT,
+    "0.0.0.0",
+    () => console.log(`HTTP   Server run at http://localhost:${process.env.PORT}`)
+  );
 
-createServer()
+
+const wsApp = express()
+  .use(cors())
+  .use(helmet());
+
+createServer(wsApp)
   .on("upgrade", (request, socket, head) => {
     if (verifySockConnect(request, socket)) {
       sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
@@ -18,9 +31,9 @@ createServer()
     }
   })
   .listen(
-    process.env.WS_PORT ?? parseInt(process.env.PORT as any, 10) + 1000,
+    process.env.WS_PORT,
     "0.0.0.0",
-    () => console.log(`HTTP Server run at http://localhost:${process.env.PORT}`)
+    () => console.log(`Socket Server run at http://localhost:${process.env.WS_PORT}`)
   );
 
 function verifySockConnect(req: IncomingMessage, socket: Duplex) {

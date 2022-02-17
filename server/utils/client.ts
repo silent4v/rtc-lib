@@ -16,6 +16,7 @@ export type Result = {
 
 export class Client {
   static appCount = 0;
+
   public username: string;
   public currentRoom: string;
   public sessionId: string;
@@ -29,6 +30,7 @@ export class Client {
   public off = this.sock.off.bind(this.sock);
   public once = this.sock.once.bind(this.sock);
   public emit = this.sock.once.bind(this.sock);
+  public eventPool = new Map<string, EventListener>();
 
   constructor(public sock: WebSocket) {
     Client.appCount = (Client.appCount + 1) % 0xfffff;
@@ -68,7 +70,7 @@ export class Client {
         const { eventType, payload, _replyToken } = result.value;
         if (eventType && typeof eventType === "string") {
           sock.emit(eventType, payload, _replyToken);
-          dd("%s %o %s", eventType, payload, _replyToken)
+          dd("%s %O %s", eventType, payload, _replyToken)
         }
       }
     });
@@ -103,7 +105,7 @@ export class Client {
   public subscribe(ch: string) {
     channelRef.subscribe(this.sessionId, ch);
     this.subscribedChannel.add(ch);
-    dd("%s current subscribe: %o", this.sid, this.subscribedChannel);
+    dd("%s current subscribe: %O", this.sid, this.subscribedChannel);
   }
 
   /**
@@ -112,7 +114,7 @@ export class Client {
   public unsubscribe(ch: string) {
     channelRef.unsubscribe(this.sessionId, ch);
     this.subscribedChannel.delete(ch);
-    dd("%s current subscribe: %o", this.sid, this.subscribedChannel);
+    dd("%s current subscribe: %O", this.sid, this.subscribedChannel);
   }
 
   /**
@@ -143,6 +145,12 @@ export class Client {
       this.enter(data.room);
       this.userData = data.userData;
       this.permission = data.permission;
+      if (this.permission.text === false) {
+        const callback = this.eventPool.get("request::text::message");
+        if (callback) {
+          this.off("request::text::message", callback as EventListener);
+        }
+      }
     }
     dd("useToken: %o", data);
     return !!data;
@@ -158,7 +166,7 @@ export class Client {
   public sendout<T>(eventType: string, payload: T) {
     const data = JSON.stringify({ eventType, payload });
     this.sock.send(data);
-    dd("[%s] %o", eventType, payload)
+    dd("[%s] %O", eventType, payload)
   }
 
 }

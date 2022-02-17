@@ -18,7 +18,10 @@ Inputs.forEach(input => { input.disabled = true; });
 fetchFollowTokenBtn.disabled = false;
 connectionBtn.onclick = async () => {
   RTC = new Connector(
-    window.location.href.replace(/^http/, "ws").replace(/(\/)?$/, "/websocket/start"),
+    window.location.href
+      .replace(/^http/, "ws")
+      // .replace(/(\/)?$/, "/websocket/start")
+      .replace(":30000", ":31000"),
     window.authHeader
   );
   // RTC.trace("*");
