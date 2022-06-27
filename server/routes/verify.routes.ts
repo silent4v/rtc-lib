@@ -3,7 +3,7 @@ import { AuthMiddleware } from "../middlewares/auth.middleware";
 import {
   issueAccessToken,
   verifyAccessToken
-} from "../controllers/verify.controller";
+} from "../restapi/verify.controller";
 
 export const verifyRouter = Router();
 verifyRouter.use(AuthMiddleware);

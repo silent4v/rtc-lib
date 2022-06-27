@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import { performance } from "perf_hooks";
 
 export const healthChecker: RequestHandler = (_, res) => {
   const runTime = (performance.now() / 1000) | 0;

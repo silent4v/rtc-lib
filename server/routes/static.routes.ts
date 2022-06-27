@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import { resolve } from "path";
-import { healthChecker } from "../controllers/static.controller";
+import { healthChecker } from "../restapi/static.controller";
 
 export const staticFileRouter = Router();
 const publicPath = resolve(__dirname, "..", "..", "..", "public");
