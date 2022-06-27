@@ -47,6 +47,7 @@ export type EventTypes =
   | "rtc::connected"
   | "rtc::channel"
   | "rtc::message"
+  | "server::ban-words"
   ;
 
 /* Text chat */

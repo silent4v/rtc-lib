@@ -6,6 +6,7 @@ declare global {
       API_KEY: string;
       AES_SECRET_KEY: string;
       AES_SECRET_IV: string;
+      BAN_WORDS: string;
     }
   }
 }

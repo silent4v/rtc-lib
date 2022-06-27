@@ -9,7 +9,7 @@ const dd = require("debug")("client");
  * This event allows clients to query their 
  * own information on the server
  */
-export const onInformation = (client: Client, server: Server) =>
+export const onInformation = (client: Client, _) =>
   (_, _replyToken: string) => {
     client.sendout(_replyToken, {
       username: client.username,

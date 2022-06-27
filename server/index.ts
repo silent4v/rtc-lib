@@ -1,4 +1,5 @@
 import { createServer, IncomingMessage } from "http";
+import { config } from "./config";
 import type { Duplex } from "stream";
 import express from "express";
 import helmet from "helmet";
@@ -6,7 +7,6 @@ import cors from "cors";
 import { sockServer } from "./utils/websocket";
 import { Client, roomRef } from "./utils";
 import { app } from "./app";
-import { staticFileRouter } from "./routes";
 
 const dd = require("debug")("wss")
 
@@ -15,7 +15,7 @@ createServer(app)
   .listen(
     process.env.PORT,
     "0.0.0.0",
-    () => console.log(`HTTP   Server run at http://localhost:${process.env.PORT}`)
+    () => console.log(`HTTP Server run at http://localhost:${process.env.PORT}`)
   );
 
 /* Websocket server */
@@ -24,8 +24,8 @@ const wsApp = express()
   .use(helmet());
 
 createServer(wsApp)
-  .on("upgrade", (request, socket, head) => {
-    sockServer.handleUpgrade(request, socket as any, head, function done(ws) {
+  .on("upgrade", (request, socket: any, head) => {
+    sockServer.handleUpgrade(request, socket, head, function done(ws) {
       const client = new Client(ws);
       client.authorization = verifySockConnect(request, socket);
       sockServer.emit("connection", client, request);

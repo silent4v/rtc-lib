@@ -1,12 +1,18 @@
 import type { WebSocketServer } from "ws";
 import type { Client } from "./client";
-const { stringify } = JSON;
 
 export class Server {
   static users_ = new Map<string, Client>();
-  static instance: Server | undefined;
+  static banWords_ = new Set<string>();
+  static instance_: Server | undefined;
+  static broadcast_ = (eventType: string, payload: any) => {
+    Server.users_.forEach(sock => {
+      sock.sendout(eventType, payload);
+    });
+  }
 
   public users = Server.users_;
+  public banWords = Server.banWords_;
   
   /* function delegate to rawSockServer */
   public on = this.sock.on.bind(this.sock);
@@ -18,15 +24,15 @@ export class Server {
   private constructor(public sock: WebSocketServer) { }
 
   public static from(sock: WebSocketServer) {
-    if(!Server.instance) {
-      Server.instance= new Server(sock);
+    if(!Server.instance_) {
+      Server.instance_= new Server(sock);
     }
-    return Server.instance;
+    const banWordList = process.env.BAN_WORDS ?? "";
+    Server.banWords_ = new Set(banWordList.split(","));
+    return Server.instance_;
   }
 
   public broadcast(eventType: string, payload: any) {
-    this.users.forEach(sock => {
-      sock.sendout(eventType, payload);
-    });
+    Server.broadcast_(eventType, payload);
   }
 }

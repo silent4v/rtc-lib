@@ -21,7 +21,7 @@ connectionBtn.onclick = async () => {
     window.location.href
       .replace(/^http/, "ws")
       // .replace(/(\/)?$/, "/websocket/start")
-      .replace(":30000", ":31000"),
+      .replace(":3000", ":13000"),
     window.authHeader
   );
   // RTC.trace("*");
@@ -135,7 +135,7 @@ testFollowTokenBtn.onclick = async () => {
         ID: "anotherId",
         name: "nickname"
       },
-      permission: { text: true }
+      permission: { text: true, read: true }
     }),
     method: "post"
   });
@@ -157,7 +157,7 @@ fetchFollowTokenBtn.onclick = async () => {
         ID: "anotherId",
         name: "nickname"
       },
-      permission: { text: true }
+      permission: { text: true, read: true }
     }),
     method: "post"
   });

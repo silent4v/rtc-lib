@@ -19,7 +19,7 @@ addUser.onclick = async () => {
   const username = `USER_${usersCount.toString().padStart(3, 0)}`;
   const client = new RTCCore.Connector(
     window.location.href.replace(/^http/, "ws")
-      .replace(":30000", ":31000")
+      .replace(":3000", ":13000")
   );
   const sid = await client.register(username);
 
@@ -50,7 +50,6 @@ addUser.onclick = async () => {
     <option value="channel5">channel 5</option>
     <option value="channel6">channel 6</option>
   `;
-
 
   userCard.appendChild(atChannel);
   userList.appendChild(userCard);

@@ -2,7 +2,7 @@ import { WebSocket } from "ws";
 import { createHash } from "crypto";
 import { performance } from "perf_hooks";
 import parse from "fast-json-parse";
-import { roomRef, channelRef } from "./index";
+import { roomRef, channelRef, Server } from "./index";
 const dd = require("debug")("client");
 
 export type Result = {
@@ -14,17 +14,24 @@ export type Result = {
   }
 }
 
+export type MessageHistory = {
+  message: string;
+  timestamp: number;
+}
+
 export class Client {
   static appCount = 0;
-
-  public username: string;
-  public currentRoom: string;
   public sessionId: string;
   public sid: string;
-  public subscribedChannel: Set<string>;
+
+  public username: string = "$NONE";
+  public currentRoom: string = "$NONE";
+  public subscribedChannel: Set<string> = new Set();
   public userData: any = {};
   public permission: any = {};
   public authorization = false;
+  public messageHistory: MessageHistory[] = [];
+  public silent = false;
 
   /* function delegate to rawSock */
   public on = this.sock.on.bind(this.sock);
@@ -39,8 +46,6 @@ export class Client {
     const chunk = `${timestamp}${performance.now()}${Client.appCount}`;
     const sessionId = createHash("sha224").update(chunk).digest("hex");
 
-    this.username = "$NONE";
-    this.currentRoom = "$NONE";
     this.sessionId = sessionId;
     this.sid = sessionId.slice(0, 8);
     this.subscribedChannel = new Set();
@@ -75,6 +80,9 @@ export class Client {
         }
       }
     });
+
+    /* more initial behavior */
+    this.sendout("server::ban-words", [...Server.banWords_.values()]);
   }
 
   /**

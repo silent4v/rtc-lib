@@ -1,8 +1,8 @@
-import { delay, waiting } from "./utils.js";
-import { Messenger } from "./messenger.js";
-import { info, failed, success, warning, debug } from "./log.js";
 import { EventScheduler } from "./events.js";
+import { Messenger } from "./messenger.js";
 import { Streamings } from "./streamings.js";
+import { info, failed, success, warning, debug } from "./log.js";
+import { delay, waiting } from "./utils.js";
 const { parse, stringify } = JSON;
 
 /** 
@@ -76,20 +76,6 @@ export class Connector {
     this.initialize();
     this.reqIter_.next();
   }
-
-  /**
-   * @private
-   * @description
-   * Initialize the event name iterator, which will ensure that the request token will never be repeated.
-   */
-  private *gen() {
-    let evt = "";
-    while (true) {
-      this.incrSeq_ = `${evt}::${performance.now().toString(36)}`;
-      evt = yield;
-    }
-  }
-
   /**
    * @description
    * set default message & close function,
@@ -122,6 +108,7 @@ export class Connector {
     this.on("unauthorize", () => {
       this.close();
     })
+
     /* Try to reconnect to server. */
     this.sockRef.onclose = e => {
       warning("Connector::close", "close");
@@ -130,6 +117,20 @@ export class Connector {
       this.reconnect(new WebSocket(url, /* protocol */));
     }
   }
+
+  /**
+   * @private
+   * @description
+   * Initialize the event name iterator, which will ensure that the request token will never be repeated.
+   */
+  private *gen() {
+    let evt = "";
+    while (true) {
+      this.incrSeq_ = `${evt}::${performance.now().toString(36)}`;
+      evt = yield;
+    }
+  }
+
 
   /**
    * 
@@ -169,8 +170,8 @@ export class Connector {
   public register(username: string) {
     this.username = username;
     const result = this.request<{ sessionId: string }>("register", { username });
-    return result.then(({ sessionId }) => { 
-      this.registerd_ = true; 
+    return result.then(({ sessionId }) => {
+      this.registerd_ = true;
       this.sessionId = sessionId;
       return sessionId;
     });
@@ -205,7 +206,6 @@ export class Connector {
    * @async
    * @param {string} eventType
    * @param {any} payload
-   * @param {...any} [flags]
    */
   public async sendout(eventType: string, payload: any, _replyToken: string = "") {
     await waiting(this.sockRef);
@@ -239,7 +239,7 @@ export class Connector {
   public async request<T = any>(eventType: string, payload?: any) {
     const defaultTimeoutMilliSec = 3000;
     const reqEvent = `request::${eventType}`;
-    this.reqIter_.next(`${eventType}`)
+    this.reqIter_.next(eventType)
     this.sendout(reqEvent, payload, this.incrSeq_);
 
     /* packed the return value */
